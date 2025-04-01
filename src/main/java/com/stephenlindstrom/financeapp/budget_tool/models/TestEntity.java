@@ -1,4 +1,4 @@
-package com.stephenlindstrom.financeapp.budget_tool.model;
+package com.stephenlindstrom.financeapp.budget_tool.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
