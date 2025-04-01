@@ -1,4 +1,4 @@
-package com.stephenlindstrom.financeapp.budget_tool.models;
+package com.stephenlindstrom.financeapp.budget_tool.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ public class Transaction {
   private Long id;
 
   private BigDecimal amount;
-  
+
   private String category;
 
   @Enumerated(EnumType.STRING)

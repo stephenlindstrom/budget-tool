@@ -1,7 +1,8 @@
 package com.stephenlindstrom.financeapp.budget_tool;
 
-import com.stephenlindstrom.financeapp.budget_tool.models.TestEntity;
-import com.stephenlindstrom.financeapp.budget_tool.repositories.TestRepository;
+import com.stephenlindstrom.financeapp.budget_tool.model.TestEntity;
+import com.stephenlindstrom.financeapp.budget_tool.repository.TestRepository;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.SpringApplication;
