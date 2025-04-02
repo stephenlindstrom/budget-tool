@@ -3,12 +3,14 @@ package com.stephenlindstrom.financeapp.budget_tool.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -21,7 +23,11 @@ public class Transaction {
 
   private BigDecimal amount;
 
-  private String category;
+  @JsonIgnore
+  @ToString.Exclude
+  @ManyToOne
+  @JoinColumn(name = "category_id")
+  private Category category;
 
   @Enumerated(EnumType.STRING)
   private TransactionType type;
