@@ -1,0 +1,23 @@
+[
+  {
+    "amount": 150.00,
+    "category": "Groceries",
+    "type": "EXPENSE",
+    "date": "2025-04-01",
+    "description": "Weekly grocery shopping"
+  },
+  {
+    "amount": 2500.00,
+    "category": "Salary",
+    "type": "INCOME",
+    "date": "2025-04-01",
+    "description": "Monthly paycheck"
+  },
+  {
+    "amount": 75.00,
+    "category": "Transportation",
+    "type": "EXPENSE",
+    "date": "2025-04-02",
+    "description": "Gas refill"
+  }
+]

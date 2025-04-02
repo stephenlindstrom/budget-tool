@@ -1,0 +1,4 @@
+amount,category,type,date,description
+150.00,Groceries,EXPENSE,2025-04-01,Weekly grocery shopping
+2500.00,Salary,INCOME,2025-04-01,Monthly paycheck
+75.00,Transportation,EXPENSE,2025-04-02,Gas refill
