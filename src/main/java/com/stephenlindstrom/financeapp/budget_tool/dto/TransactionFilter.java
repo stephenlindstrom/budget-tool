@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class TransactionFilter {
   private TransactionType type;
-  private String category;
+  private Long categoryId;
   private LocalDate startDate;
   private LocalDate endDate;
 }

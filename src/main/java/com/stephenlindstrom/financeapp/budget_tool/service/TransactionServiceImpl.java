@@ -37,9 +37,9 @@ public class TransactionServiceImpl implements TransactionService {
               .toList();
     }
 
-    if (filter.getCategory() != null && !filter.getCategory().isBlank()) {
+    if (filter.getCategoryId() != null) {
       result = result.stream()
-              .filter(t -> t.getCategory().equalsIgnoreCase(filter.getCategory()))
+              .filter(t -> t.getCategory() != null && t.getCategory().getId().equals(filter.getCategoryId()))
               .toList();
     }
 

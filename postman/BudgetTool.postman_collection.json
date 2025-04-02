@@ -13,7 +13,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"amount\": 150.00,\n  \"category\": \"Groceries\",\n  \"type\": \"EXPENSE\",\n  \"date\": \"2025-04-01\",\n  \"description\": \"Weekly shopping\"\n}"
+          "raw": "{\n  \"amount\": 150.00,\n  \"categoryId\": 1,\n  \"type\": \"EXPENSE\",\n  \"date\": \"2025-04-01\",\n  \"description\": \"Weekly shopping\"\n}"
         },
         "url": {
           "raw": "http://localhost:8080/api/transactions",
@@ -42,11 +42,14 @@
       "request": {
         "method": "GET",
         "url": {
-          "raw": "http://localhost:8080/api/transactions/type/EXPENSE",
+          "raw": "http://localhost:8080/api/transactions/filter?type=EXPENSE",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
-          "path": ["api", "transactions", "type", "EXPENSE"]
+          "path": ["api", "transactions", "filter"],
+          "query": [
+            { "key": "type", "value": "EXPENSE" }
+          ]
         }
       }
     },
@@ -55,11 +58,14 @@
       "request": {
         "method": "GET",
         "url": {
-          "raw": "http://localhost:8080/api/transactions/category/Groceries",
+          "raw": "http://localhost:8080/api/transactions/filter?categoryId=1",
           "protocol": "http",
           "host": ["localhost"],
           "port": "8080",
-          "path": ["api", "transactions", "category", "Groceries"]
+          "path": ["api", "transactions", "filter"],
+          "query": [
+            { "key": "categoryId", "value": 1 }
+          ]
         }
       }
     },
