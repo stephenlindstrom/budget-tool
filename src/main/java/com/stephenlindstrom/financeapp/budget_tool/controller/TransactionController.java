@@ -40,6 +40,11 @@ public class TransactionController {
     return ResponseEntity.ok(transactionService.getByType(type));
   }
 
+  @GetMapping("/category/{category}")
+  public ResponseEntity<List<Transaction>> getByCategory(@PathVariable String category) {
+    return ResponseEntity.ok(transactionService.getByCategory(category));
+  }
+
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     transactionService.deleteById(id);

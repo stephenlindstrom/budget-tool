@@ -51,6 +51,19 @@
       }
     },
     {
+      "name": "Get Transactions by Category",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/api/transactions/category/Groceries",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "transactions", "category", "Groceries"]
+        }
+      }
+    },
+    {
       "name": "Delete Transaction by ID",
       "request": {
         "method": "DELETE",
