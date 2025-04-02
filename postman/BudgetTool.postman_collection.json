@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "Budget Tool - Transactions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Transaction",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 150.00,\n  \"category\": \"Groceries\",\n  \"type\": \"EXPENSE\",\n  \"date\": \"2025-04-01\",\n  \"description\": \"Weekly shopping\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/transactions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "transactions"]
+        }
+      }
+    },
+    {
+      "name": "Get All Transactions",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/api/transactions",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "transactions"]
+        }
+      }
+    },
+    {
+      "name": "Get Transactions by Type",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/api/transactions/type/EXPENSE",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "transactions", "type", "EXPENSE"]
+        }
+      }
+    },
+    {
+      "name": "Delete Transaction by ID",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "http://localhost:8080/api/transactions/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "transactions", "1"]
+        }
+      }
+    }
+  ]
+}
