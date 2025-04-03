@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
@@ -19,18 +21,23 @@ public class CategoryServiceImpl implements CategoryService {
   }
 
   @Override
-  public Category create(Category category) {
-    return categoryRepository.save(category);
+  public CategoryDTO create(CategoryCreateDTO dto) {
+    Category category = mapToEntity(dto);
+    Category saved = categoryRepository.save(category);
+    return mapToDTO(saved);
   }
 
   @Override
-  public List<Category> getAll() {
-    return categoryRepository.findAll();
+  public List<CategoryDTO> getAll() {
+    return categoryRepository.findAll().stream()   
+            .map(this::mapToDTO)
+            .toList();
   }
 
   @Override
-  public Optional<Category> getById(Long id) {
-    return categoryRepository.findById(id);
+  public Optional<CategoryDTO> getById(Long id) {
+    return categoryRepository.findById(id)
+            .map(this::mapToDTO);
   }
 
   @Override
@@ -44,13 +51,26 @@ public class CategoryServiceImpl implements CategoryService {
   }
 
   @Override
-  public List<Category> getByType(TransactionType type) {
-    List<Category> result = categoryRepository.findAll();
-    result = result.stream() 
+  public List<CategoryDTO> getByType(TransactionType type) {
+    return categoryRepository.findAll().stream() 
             .filter(c -> c.getType() == type)
+            .map(this::mapToDTO)
             .toList();
+  }
 
-    return result;
+  private Category mapToEntity(CategoryCreateDTO dto) {
+    return Category.builder()
+            .name(dto.getName())
+            .type(dto.getType())
+            .build();
+  }
+
+  private CategoryDTO mapToDTO(Category category) {
+    return CategoryDTO.builder()
+            .id(category.getId())
+            .name(category.getName())
+            .type(category.getType())
+            .build();
   }
 
 }
