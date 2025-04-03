@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Food",
+    "type": "EXPENSE"
+  },
+  {
+    "name": "Housing",
+    "type": "EXPENSE"
+  },
+  {
+    "name": "Salary",
+    "type": "INCOME"
+  }
+]
