@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
@@ -54,7 +55,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   private Budget mapToEntity(BudgetCreateDTO dto) {
     Category category = categoryRepository.findById(dto.getCategoryId())
-      .orElseThrow(() -> new RuntimeException("Category not found"));
+      .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
     return Budget.builder()
             .value(dto.getValue())
