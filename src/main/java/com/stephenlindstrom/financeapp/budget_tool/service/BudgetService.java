@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 
 public interface BudgetService {
   BudgetDTO create(BudgetCreateDTO dto);
@@ -13,4 +14,5 @@ public interface BudgetService {
   Optional<BudgetDTO> getById(Long id);
   void deleteById(Long id);
   boolean existsByCategoryIdAndMonth(Long categoryId, YearMonth month);
+  BudgetSummaryDTO getBudgetSummary(Long id);
 }

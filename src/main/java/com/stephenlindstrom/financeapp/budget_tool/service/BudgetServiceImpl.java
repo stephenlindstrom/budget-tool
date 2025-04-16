@@ -1,15 +1,20 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
+import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
+import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
+import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -17,10 +22,12 @@ public class BudgetServiceImpl implements BudgetService {
 
   private final BudgetRepository budgetRepository;
   private final CategoryRepository categoryRepository;
+  private final TransactionService transactionService;
 
-  public BudgetServiceImpl(BudgetRepository budgetRepository, CategoryRepository categoryRepository) {
+  public BudgetServiceImpl(BudgetRepository budgetRepository, CategoryRepository categoryRepository, TransactionService transactionService) {
     this.budgetRepository = budgetRepository;
     this.categoryRepository = categoryRepository;
+    this.transactionService = transactionService;
   }
 
   @Override
@@ -50,6 +57,36 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public boolean existsByCategoryIdAndMonth(Long categoryId, YearMonth month) {
     return budgetRepository.existsByCategoryIdAndMonth(categoryId, month);
+  }
+
+  @Override
+  public BudgetSummaryDTO getBudgetSummary(Long id) {
+    Budget budget = budgetRepository.findById(id)
+      .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
+    
+    TransactionFilter filter = TransactionFilter.builder()
+                              .type(TransactionType.EXPENSE)
+                              .categoryId(budget.getCategory().getId())
+                              .startDate(budget.getMonth().atDay(1))
+                              .endDate(budget.getMonth().atEndOfMonth())
+                              .build();
+
+    List<Transaction> expenseTransactions = transactionService.filter(filter);
+
+    BigDecimal spent = expenseTransactions.stream().map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal budgeted = budget.getValue();
+
+    BigDecimal remaining = budgeted.subtract(spent);
+
+    BudgetSummaryDTO budgetSummary = BudgetSummaryDTO.builder()
+                                      .budgeted(budgeted)
+                                      .spent(spent)
+                                      .remaining(remaining)
+                                      .build();
+
+    return budgetSummary;
+    
   }
   
 
