@@ -88,6 +88,11 @@ public class BudgetServiceImpl implements BudgetService {
     return budgetSummary;
     
   }
+
+  @Override
+  public List<BudgetDTO> getByMonth(YearMonth month) {
+    return budgetRepository.findByMonth(month).stream().map(this::mapToDTO).toList();
+  }
   
 
   private Budget mapToEntity(BudgetCreateDTO dto) {

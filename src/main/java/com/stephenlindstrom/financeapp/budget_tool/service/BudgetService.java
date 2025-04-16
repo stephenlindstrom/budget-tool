@@ -15,4 +15,5 @@ public interface BudgetService {
   void deleteById(Long id);
   boolean existsByCategoryIdAndMonth(Long categoryId, YearMonth month);
   BudgetSummaryDTO getBudgetSummary(Long id);
+  List<BudgetDTO> getByMonth(YearMonth month);
 }
