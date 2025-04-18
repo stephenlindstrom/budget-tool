@@ -8,6 +8,7 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -16,6 +17,7 @@ import lombok.ToString;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Transaction {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

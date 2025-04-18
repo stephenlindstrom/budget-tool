@@ -11,6 +11,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
@@ -73,9 +74,9 @@ public class BudgetServiceImpl implements BudgetService {
                               .endDate(budget.getMonth().atEndOfMonth())
                               .build();
 
-    List<Transaction> expenseTransactions = transactionService.filter(filter);
+    List<TransactionDTO> expenseTransactions = transactionService.filter(filter);
 
-    BigDecimal spent = expenseTransactions.stream().map(Transaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal spent = expenseTransactions.stream().map(TransactionDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
     BigDecimal budgeted = budget.getValue();
 
