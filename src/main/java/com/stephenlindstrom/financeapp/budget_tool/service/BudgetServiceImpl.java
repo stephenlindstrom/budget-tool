@@ -2,6 +2,7 @@ package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,6 +10,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
@@ -93,6 +95,11 @@ public class BudgetServiceImpl implements BudgetService {
   public List<BudgetDTO> getByMonth(YearMonth month) {
     return budgetRepository.findByMonth(month).stream().map(this::mapToDTO).toList();
   }
+
+  @Override
+  public List<MonthDTO> getAvailableMonths() {
+    return budgetRepository.findDistinctMonths().stream().map(this::mapToDTO).toList();
+  }
   
 
   private Budget mapToEntity(BudgetCreateDTO dto) {
@@ -120,6 +127,15 @@ public class BudgetServiceImpl implements BudgetService {
             .value(budget.getValue())
             .month(budget.getMonth())
             .category(categoryDTO)
+            .build();
+  }
+
+  private MonthDTO mapToDTO(YearMonth month) {
+    DateTimeFormatter valueFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+    DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("MMMM yyyy");
+    return MonthDTO.builder()
+            .value(month.format(valueFormatter))
+            .display(month.format(displayFormatter))
             .build();
   }
 

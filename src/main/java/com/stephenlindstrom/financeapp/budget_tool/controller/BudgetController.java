@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
 
 import jakarta.validation.Valid;
@@ -47,6 +48,11 @@ public class BudgetController {
           .map(ResponseEntity::ok)
           .orElse(ResponseEntity.notFound().build());
   }
+
+  @GetMapping("/months")
+  public ResponseEntity<List<MonthDTO>> getAvailableMonths() {
+    return ResponseEntity.ok(budgetService.getAvailableMonths());
+  } 
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
