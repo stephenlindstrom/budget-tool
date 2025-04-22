@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
@@ -17,10 +19,10 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
-import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
+@Service
 public class BudgetServiceImpl implements BudgetService {
 
   private final BudgetRepository budgetRepository;
