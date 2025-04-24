@@ -18,6 +18,8 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -34,6 +36,11 @@ public class BudgetController {
     summary = "Create a new budget",
     description = "Create a new budget with an amount, a month and year, and associated category"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "201", description = "Budget created successfully"),
+    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @PostMapping
   public ResponseEntity<BudgetDTO> create(@RequestBody @Valid BudgetCreateDTO dto) {
     BudgetDTO created = budgetService.create(dto);
@@ -46,6 +53,10 @@ public class BudgetController {
     summary = "Get all budgets",
     description = "Returns a list of all budgets"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Budgets found and returned"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @GetMapping
   public ResponseEntity<List<BudgetDTO>> getAll() {
     return ResponseEntity.ok(budgetService.getAll());
@@ -53,8 +64,13 @@ public class BudgetController {
 
   @Operation(
     summary = "Get budget by ID",
-    description = "Returns the specific budget requested by ID or not found response"
+    description = "Returns the budget with the given ID, or a 404 if not found"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Budget found and returned"),
+    @ApiResponse(responseCode = "404", description = "Budget not found"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @GetMapping("/{id}")
   public ResponseEntity<BudgetDTO> getById(@PathVariable Long id) {
     return budgetService.getById(id)
@@ -63,17 +79,27 @@ public class BudgetController {
   }
 
   @Operation(
-    summary = "Get all year and month combos for saved budgets",
-    description = "Returns a list of all year and month combinations for saved budgets"
+    summary = "Get available months with saved budgets",
+    description = "Returns a list of all year-month combinations that have saved budget records"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Months found and returned"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @GetMapping("/months")
   public ResponseEntity<List<MonthDTO>> getAvailableMonths() {
     return ResponseEntity.ok(budgetService.getAvailableMonths());
   } 
 
   @Operation(
-    summary = "Delete a budget by ID"
+    summary = "Delete a budget by ID",
+    description = "Deletes a budget with the specified ID"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Budget deleted successfully"),
+    @ApiResponse(responseCode = "404", description = "Budget not found"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
     budgetService.deleteById(id);

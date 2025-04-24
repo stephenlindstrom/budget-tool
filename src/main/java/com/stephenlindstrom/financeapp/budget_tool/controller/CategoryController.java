@@ -17,6 +17,8 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -33,6 +35,11 @@ public class CategoryController {
     summary = "Create a category",
     description = "Creates a category with a given name and transaction type"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "201", description = "Category created successfully"),
+    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @PostMapping
   public ResponseEntity<CategoryDTO> create(@RequestBody @Valid CategoryCreateDTO dto) {
     CategoryDTO created = categoryService.create(dto);
@@ -45,6 +52,10 @@ public class CategoryController {
     summary= "Get all categories",
     description = "Returns a list of all categories"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Categories found and returned"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @GetMapping
   public ResponseEntity<List<CategoryDTO>> getAll() {
     return ResponseEntity.ok(categoryService.getAll());
@@ -54,6 +65,11 @@ public class CategoryController {
     summary = "Get a category by ID",
     description = "Returns a category with a certain ID or a not found response"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Category found and returned"),
+    @ApiResponse(responseCode = "404", description = "Category not found"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @GetMapping("/{id}")
   public ResponseEntity<CategoryDTO> getById(@PathVariable Long id) {
     return categoryService.getById(id)
@@ -62,8 +78,14 @@ public class CategoryController {
   }
 
   @Operation(
-    summary = "Delete a category by ID"
+    summary = "Delete a category by ID",
+    description = "Deletes the category with the specified ID"
   )
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Category deleted successfully"),
+    @ApiResponse(responseCode = "404", description = "Category not found"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     categoryService.deleteById(id);
