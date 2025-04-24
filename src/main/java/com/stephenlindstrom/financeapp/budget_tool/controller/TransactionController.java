@@ -19,7 +19,6 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.service.TransactionService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
