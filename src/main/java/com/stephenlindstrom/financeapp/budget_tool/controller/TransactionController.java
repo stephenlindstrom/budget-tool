@@ -18,6 +18,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.service.TransactionService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 
 @RestController
@@ -30,23 +31,38 @@ public class TransactionController {
     this.transactionService = transactionService;
   }
 
+  @Operation(
+    summary = "Create a transaction",
+    description = "Creates a transaction with a given amount, category, transaction type, date, and description"
+  )
   @PostMapping
   public ResponseEntity<TransactionDTO> create(@RequestBody @Valid TransactionCreateDTO dto) {
     TransactionDTO created = transactionService.save(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
+  @Operation(
+    summary = "Get all transactions",
+    description = "Returns a list of all transactions"
+  )
   @GetMapping
   public ResponseEntity<List<TransactionDTO>> getAll() {
     return ResponseEntity.ok(transactionService.getAll());
   }
 
+  @Operation(
+    summary = "Get filtered transactions",
+    description = "Returns a list of transactions optionally filtered by transaction type, category, start date, and/or end date"
+  )
   @GetMapping("/filter")
   public ResponseEntity<List<TransactionDTO>> filter(@ModelAttribute TransactionFilter filter) {
     List<TransactionDTO> results = transactionService.filter(filter);
     return ResponseEntity.ok(results);
   }
 
+  @Operation(
+    summary = "Delete a transaction by ID"
+  )
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     transactionService.deleteById(id);
