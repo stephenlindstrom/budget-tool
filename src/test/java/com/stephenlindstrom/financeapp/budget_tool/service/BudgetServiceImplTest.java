@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,7 +34,6 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
-import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -48,12 +48,8 @@ public class BudgetServiceImplTest {
   @Mock
   private TransactionService transactionService;
 
+  @InjectMocks
   private BudgetServiceImpl budgetService;
-
-  @BeforeEach
-  void setUp() {
-    budgetService = new BudgetServiceImpl(budgetRepository, categoryRepository, transactionService);
-  }
 
   @Test
   void testCreate_WithValidInput_ReturnsBudgetDTO() {
