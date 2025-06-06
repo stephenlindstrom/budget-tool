@@ -256,4 +256,13 @@ public class TransactionServiceImplTest {
     assertTrue(dtos.isEmpty());
   }
 
+  @Test
+  void testDeleteById_WithValidId_NoReturnValue() {
+    // Act
+    transactionService.deleteById(1L);
+
+    // Assert
+    verify(transactionRepository).deleteById(1L);
+  }
+
 }
