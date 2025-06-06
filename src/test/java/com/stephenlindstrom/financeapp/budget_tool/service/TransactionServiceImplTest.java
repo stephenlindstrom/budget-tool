@@ -10,6 +10,9 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -161,6 +164,81 @@ public class TransactionServiceImplTest {
     assertEquals(categoryId, categoryDTO.getId());
     assertEquals("Groceries", categoryDTO.getName());
     assertEquals(type, categoryDTO.getType());
+  }
+
+  @Test
+  void testGetAll_WithEntries_ReturnsListofTransactionDTO() {
+    // Arrange
+    TransactionType type = TransactionType.EXPENSE;
+
+    BigDecimal amount1 = BigDecimal.valueOf(100.00);
+    LocalDate date1 = LocalDate.of(2025, 5, 1);
+    String description1 = "food";
+
+    BigDecimal amount2 = BigDecimal.valueOf(50.00);
+    LocalDate date2 = LocalDate.of(2025, 6, 4);
+    String description2 = "gas";
+
+
+    Category savedCategory1 = Category.builder()
+        .id(1L)
+        .name("Groceries")
+        .type(type)
+        .build();
+
+    Category savedCategory2 = Category.builder()
+        .id(2L)
+        .name("Car")
+        .type(type)
+        .build();
+    
+    Transaction savedTransaction1 = Transaction.builder()
+        .id(1L)
+        .amount(amount1)
+        .category(savedCategory1)
+        .type(type)
+        .date(date1)
+        .description(description1)
+        .build();
+
+    Transaction savedTransaction2 = Transaction.builder()
+        .id(2L)
+        .amount(amount2)
+        .category(savedCategory2)
+        .type(type)
+        .date(date2)
+        .description(description2)
+        .build();
+
+    List<Transaction> transactionList = new ArrayList<>(Arrays.asList(savedTransaction1, savedTransaction2));
+
+    when(transactionRepository.findAll()).thenReturn(transactionList);
+
+    // Act
+    List<TransactionDTO> dtos = transactionService.getAll();
+
+    // Assert
+    assertEquals(2, dtos.size());
+    assertEquals(1L, dtos.get(0).getId());
+    assertEquals(2L, dtos.get(1).getId());
+    assertEquals(amount1, dtos.get(0).getAmount());
+    assertEquals(amount2, dtos.get(1).getAmount());
+    assertEquals(date1, dtos.get(0).getDate());
+    assertEquals(date2, dtos.get(1).getDate());
+    assertEquals(type, dtos.get(0).getType());
+    assertEquals(type, dtos.get(1).getType());
+    assertEquals(description1, dtos.get(0).getDescription());
+    assertEquals(description2, dtos.get(1).getDescription());
+
+    CategoryDTO categoryDTO1 = dtos.get(0).getCategory();
+    CategoryDTO categoryDTO2 = dtos.get(1).getCategory();
+
+    assertEquals(1L, categoryDTO1.getId());
+    assertEquals(2L, categoryDTO2.getId());
+    assertEquals("Groceries", categoryDTO1.getName());
+    assertEquals("Car", categoryDTO2.getName());
+    assertEquals(type, categoryDTO1.getType());
+    assertEquals(type, categoryDTO2.getType());
   }
 
 }
