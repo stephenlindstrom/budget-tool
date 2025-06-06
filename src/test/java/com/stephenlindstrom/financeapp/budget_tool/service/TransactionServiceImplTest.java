@@ -3,6 +3,7 @@ package com.stephenlindstrom.financeapp.budget_tool.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -239,6 +240,20 @@ public class TransactionServiceImplTest {
     assertEquals("Car", categoryDTO2.getName());
     assertEquals(type, categoryDTO1.getType());
     assertEquals(type, categoryDTO2.getType());
+  }
+
+  @Test
+  void testGetAll_WithNoEntries_ReturnsEmptyList() {
+    // Arrange
+    List<Transaction> transactionList = new ArrayList<>();
+
+    when(transactionRepository.findAll()).thenReturn(transactionList);
+
+    // Act
+    List<TransactionDTO> dtos = transactionService.getAll();
+
+    // Assert
+    assertTrue(dtos.isEmpty());
   }
 
 }
