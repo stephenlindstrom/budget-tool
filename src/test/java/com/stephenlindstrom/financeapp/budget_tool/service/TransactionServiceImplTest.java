@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -44,6 +46,45 @@ public class TransactionServiceImplTest {
 
   @InjectMocks
   private TransactionServiceImpl transactionService;
+
+  private List<Transaction> transactionBatch;
+  private Category category1;
+  private Category category2;
+  private Category category3;
+
+  @BeforeEach
+  void setUp() {
+    TransactionType type = TransactionType.EXPENSE;
+
+    category1 = createCategory(1L, "Groceries", type);
+    category2 = createCategory(2L, "Car", type);
+    category3 = createCategory(3L, "Miscellaneous", type);
+
+    Transaction transaction1 = createTransaction(1L, BigDecimal.valueOf(100.00), category1, LocalDate.of(2025, 5, 1), "food");
+    Transaction transaction2 = createTransaction(2L, BigDecimal.valueOf(50.00), category2, LocalDate.of(2025, 6, 4), "gas");
+    Transaction transaction3 = createTransaction(3L, BigDecimal.valueOf(150.00), category3, LocalDate.of(2024, 12, 23), "gifts");
+
+    transactionBatch = Arrays.asList(transaction1, transaction2, transaction3);
+  }
+
+  private Transaction createTransaction(Long id, BigDecimal amount, Category category, LocalDate date, String description) {
+    return Transaction.builder()
+            .id(id)
+            .amount(amount)
+            .category(category)
+            .type(category.getType())
+            .date(date)
+            .description(description)
+            .build();
+  }
+
+  private Category createCategory(Long id, String name, TransactionType type) {
+    return Category.builder()
+            .id(id)
+            .name(name)
+            .type(type)
+            .build();
+  }
 
 
   @Test
@@ -268,69 +309,8 @@ public class TransactionServiceImplTest {
 
   @Test
   void testFilter_NoFilterCriteria_ReturnsAllTransactions() {
-    TransactionType type = TransactionType.EXPENSE;
-
-    BigDecimal amount1 = BigDecimal.valueOf(100.00);
-    LocalDate date1 = LocalDate.of(2025, 5, 1);
-    String description1 = "food";
-
-    BigDecimal amount2 = BigDecimal.valueOf(50.00);
-    LocalDate date2 = LocalDate.of(2025, 6, 4);
-    String description2 = "gas";
-
-    BigDecimal amount3 = BigDecimal.valueOf(150.00);
-    LocalDate date3 = LocalDate.of(2024, 12, 23);
-    String description3 = "gifts";
-
-
-    Category savedCategory1 = Category.builder()
-        .id(1L)
-        .name("Groceries")
-        .type(type)
-        .build();
-
-    Category savedCategory2 = Category.builder()
-        .id(2L)
-        .name("Car")
-        .type(type)
-        .build();
-
-    Category savedCategory3 = Category.builder()
-        .id(3L)
-        .name("Miscellaneous")
-        .type(type)
-        .build();
-    
-    Transaction savedTransaction1 = Transaction.builder()
-        .id(1L)
-        .amount(amount1)
-        .category(savedCategory1)
-        .type(type)
-        .date(date1)
-        .description(description1)
-        .build();
-
-    Transaction savedTransaction2 = Transaction.builder()
-        .id(2L)
-        .amount(amount2)
-        .category(savedCategory2)
-        .type(type)
-        .date(date2)
-        .description(description2)
-        .build();
-
-    Transaction savedTransaction3 = Transaction.builder()
-        .id(3L)
-        .amount(amount3)
-        .category(savedCategory3)
-        .type(type)
-        .date(date3)
-        .description(description3)
-        .build();
-    
-    List<Transaction> transactionList = new ArrayList<>(Arrays.asList(savedTransaction1, savedTransaction2, savedTransaction3));
-
-    when(transactionRepository.findAll()).thenReturn(transactionList);
+    //Arrange
+    when(transactionRepository.findAll()).thenReturn(transactionBatch);
 
     // Act
     List<TransactionDTO> dtos = transactionService.filter(new TransactionFilter()); 
