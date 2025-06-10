@@ -50,7 +50,6 @@ public class TransactionServiceImplTest {
   private Category category1;
   private Category category2;
   private Category category3;
-  private Category category4;
 
   @BeforeEach
   void setUp() {
@@ -58,13 +57,12 @@ public class TransactionServiceImplTest {
 
     category1 = createCategory(1L, "Groceries", type);
     category2 = createCategory(2L, "Car", type);
-    category3 = createCategory(3L, "Miscellaneous", type);
-    category4 = createCategory(4L, "Salary", TransactionType.INCOME);
+    category3 = createCategory(3L, "Salary", TransactionType.INCOME);
 
     Transaction transaction1 = createTransaction(1L, BigDecimal.valueOf(100.00), category1, LocalDate.of(2025, 5, 1), "food");
     Transaction transaction2 = createTransaction(2L, BigDecimal.valueOf(50.00), category2, LocalDate.of(2025, 6, 4), "gas");
-    Transaction transaction3 = createTransaction(3L, BigDecimal.valueOf(150.00), category3, LocalDate.of(2024, 12, 23), "gifts");
-    Transaction transaction4 = createTransaction(4L, BigDecimal.valueOf(2000.00), category4, LocalDate.of(2025, 4, 25), "Paycheck");
+    Transaction transaction3 = createTransaction(3L, BigDecimal.valueOf(150.00), category2, LocalDate.of(2024, 12, 23), "repairs");
+    Transaction transaction4 = createTransaction(4L, BigDecimal.valueOf(2000.00), category3, LocalDate.of(2025, 4, 25), "Paycheck");
 
     transactionBatch = Arrays.asList(transaction1, transaction2, transaction3, transaction4);
   }
@@ -321,5 +319,66 @@ public class TransactionServiceImplTest {
     assertEquals(4, dtos.size());
   }
 
+  @Test
+  void testFilter_FilterByExpenseType_ReturnsAllExpenses() {
+    // Arrange
+    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    TransactionFilter filter = new TransactionFilter(TransactionType.EXPENSE, null, null, null);
+
+    // Act
+    List<TransactionDTO> dtos = transactionService.filter(filter);
+
+    // Assert
+    assertEquals(3, dtos.size());
+    assertEquals(TransactionType.EXPENSE, dtos.get(0).getType());
+    assertEquals(TransactionType.EXPENSE, dtos.get(1).getType());
+    assertEquals(TransactionType.EXPENSE, dtos.get(2).getType());
+  }
+
+  @Test
+  void testFilter_FilterByCategoryId2_ReturnsTransactionsWithCategoryId2() {
+    // Arrange
+    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    TransactionFilter filter = new TransactionFilter(null, 2L, null, null);
+
+    // Act
+    List<TransactionDTO> dtos = transactionService.filter(filter);
+
+    // Assert
+    assertEquals(2, dtos.size());
+    assertEquals(2L, dtos.get(0).getCategory().getId());
+    assertEquals(2L, dtos.get(1).getCategory().getId());
+  }
+
+  @Test
+  void testFilter_FilterByDate_ReturnsTransactionsBetweenStartAndEndDates() {
+    // Arrange
+    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    TransactionFilter filter = new TransactionFilter(null, null, LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 1));
+
+    // Act
+    List<TransactionDTO> dtos = transactionService.filter(filter);
+
+    // Assert
+    assertEquals(2, dtos.size());
+    assertTrue(!dtos.get(0).getDate().isBefore(filter.getStartDate()));
+    assertTrue(!dtos.get(0).getDate().isAfter(filter.getEndDate()));
+    assertTrue(!dtos.get(1).getDate().isBefore(filter.getStartDate()));
+    assertTrue(!dtos.get(1).getDate().isAfter(filter.getEndDate()));
+  }
+
+  @Test
+  void testFilter_FilterByAllCriteria_ReturnsCorrectlyFilteredTransactions() {
+    // Arrange
+    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    TransactionFilter filter = new TransactionFilter(TransactionType.EXPENSE, 2L, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31));
+
+    // Act
+    List<TransactionDTO> dtos = transactionService.filter(filter);
+
+    // Assert
+    assertEquals(1, dtos.size());
+    assertEquals(2L, dtos.get(0).getId());
+  }
 
 }
