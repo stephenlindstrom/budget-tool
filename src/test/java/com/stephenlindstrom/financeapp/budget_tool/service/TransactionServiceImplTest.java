@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +50,7 @@ public class TransactionServiceImplTest {
   private Category category1;
   private Category category2;
   private Category category3;
+  private Category category4;
 
   @BeforeEach
   void setUp() {
@@ -59,12 +59,14 @@ public class TransactionServiceImplTest {
     category1 = createCategory(1L, "Groceries", type);
     category2 = createCategory(2L, "Car", type);
     category3 = createCategory(3L, "Miscellaneous", type);
+    category4 = createCategory(4L, "Salary", TransactionType.INCOME);
 
     Transaction transaction1 = createTransaction(1L, BigDecimal.valueOf(100.00), category1, LocalDate.of(2025, 5, 1), "food");
     Transaction transaction2 = createTransaction(2L, BigDecimal.valueOf(50.00), category2, LocalDate.of(2025, 6, 4), "gas");
     Transaction transaction3 = createTransaction(3L, BigDecimal.valueOf(150.00), category3, LocalDate.of(2024, 12, 23), "gifts");
+    Transaction transaction4 = createTransaction(4L, BigDecimal.valueOf(2000.00), category4, LocalDate.of(2025, 4, 25), "Paycheck");
 
-    transactionBatch = Arrays.asList(transaction1, transaction2, transaction3);
+    transactionBatch = Arrays.asList(transaction1, transaction2, transaction3, transaction4);
   }
 
   private Transaction createTransaction(Long id, BigDecimal amount, Category category, LocalDate date, String description) {
@@ -316,7 +318,8 @@ public class TransactionServiceImplTest {
     List<TransactionDTO> dtos = transactionService.filter(new TransactionFilter()); 
 
     // Assert
-    assertEquals(3, dtos.size());
+    assertEquals(4, dtos.size());
   }
+
 
 }
