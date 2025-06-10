@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,46 +46,66 @@ public class TransactionServiceImplTest {
   @InjectMocks
   private TransactionServiceImpl transactionService;
 
-  private List<Transaction> transactionBatch;
-  private Category category1;
-  private Category category2;
-  private Category category3;
+  private static List<Transaction> transactionBatch;
 
-  @BeforeEach
-  void setUp() {
-    TransactionType type = TransactionType.EXPENSE;
+  @BeforeAll
+  static void initData() {
+    Category category1 = Category.builder()
+                          .id(1L)
+                          .name("Groceries")
+                          .type(TransactionType.EXPENSE)
+                          .build();
+    
+    Category category2 = Category.builder()
+                          .id(2L)
+                          .name("Car")
+                          .type(TransactionType.EXPENSE)
+                          .build();
 
-    category1 = createCategory(1L, "Groceries", type);
-    category2 = createCategory(2L, "Car", type);
-    category3 = createCategory(3L, "Salary", TransactionType.INCOME);
+    Category category3 = Category.builder()
+                          .id(3L)
+                          .name("Salary")
+                          .type(TransactionType.INCOME)
+                          .build();
 
-    Transaction transaction1 = createTransaction(1L, BigDecimal.valueOf(100.00), category1, LocalDate.of(2025, 5, 1), "food");
-    Transaction transaction2 = createTransaction(2L, BigDecimal.valueOf(50.00), category2, LocalDate.of(2025, 6, 4), "gas");
-    Transaction transaction3 = createTransaction(3L, BigDecimal.valueOf(150.00), category2, LocalDate.of(2024, 12, 23), "repairs");
-    Transaction transaction4 = createTransaction(4L, BigDecimal.valueOf(2000.00), category3, LocalDate.of(2025, 4, 25), "Paycheck");
+    Transaction transaction1 = Transaction.builder()
+                                .id(1L)
+                                .amount(BigDecimal.valueOf(100.00))
+                                .category(category1)
+                                .type(category1.getType())
+                                .date(LocalDate.of(2025, 5, 1))
+                                .description("food")
+                                .build();
+
+    Transaction transaction2 = Transaction.builder()
+                                .id(2L)
+                                .amount(BigDecimal.valueOf(50.00))
+                                .category(category2)
+                                .type(category2.getType())
+                                .date(LocalDate.of(2025, 6, 4))
+                                .description("gas")
+                                .build();
+    
+    Transaction transaction3 = Transaction.builder()
+                                .id(3L)
+                                .amount(BigDecimal.valueOf(150.00))
+                                .category(category2)
+                                .type(category2.getType())
+                                .date(LocalDate.of(2024, 12, 23))
+                                .description("repairs")
+                                .build();
+
+    Transaction transaction4 = Transaction.builder()
+                                .id(4L)
+                                .amount(BigDecimal.valueOf(2000.00))
+                                .category(category3)
+                                .type(category3.getType())
+                                .date(LocalDate.of(2025, 4, 25))
+                                .description("paycheck")
+                                .build();
 
     transactionBatch = Arrays.asList(transaction1, transaction2, transaction3, transaction4);
   }
-
-  private Transaction createTransaction(Long id, BigDecimal amount, Category category, LocalDate date, String description) {
-    return Transaction.builder()
-            .id(id)
-            .amount(amount)
-            .category(category)
-            .type(category.getType())
-            .date(date)
-            .description(description)
-            .build();
-  }
-
-  private Category createCategory(Long id, String name, TransactionType type) {
-    return Category.builder()
-            .id(id)
-            .name(name)
-            .type(type)
-            .build();
-  }
-
 
   @Test
   void testSave_WithValidInput_ReturnsTransactionDTO() {
