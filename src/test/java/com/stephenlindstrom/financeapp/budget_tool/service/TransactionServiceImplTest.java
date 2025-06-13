@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
@@ -235,11 +237,11 @@ public class TransactionServiceImplTest {
     TransactionType type = TransactionType.EXPENSE;
 
     BigDecimal amount1 = BigDecimal.valueOf(100.00);
-    LocalDate date1 = LocalDate.of(2025, 5, 1);
+    LocalDate date1 = LocalDate.of(2025, 6, 5);
     String description1 = "food";
 
     BigDecimal amount2 = BigDecimal.valueOf(50.00);
-    LocalDate date2 = LocalDate.of(2025, 6, 4);
+    LocalDate date2 = LocalDate.of(2025, 5, 1);
     String description2 = "gas";
 
 
@@ -275,7 +277,7 @@ public class TransactionServiceImplTest {
 
     List<Transaction> transactionList = new ArrayList<>(Arrays.asList(savedTransaction1, savedTransaction2));
 
-    when(transactionRepository.findAll()).thenReturn(transactionList);
+    when(transactionRepository.findAll(any(Sort.class))).thenReturn(transactionList.stream().sorted(Comparator.comparing(Transaction::getDate).reversed()).toList());
 
     // Act
     List<TransactionDTO> dtos = transactionService.getAll();
@@ -309,7 +311,7 @@ public class TransactionServiceImplTest {
     // Arrange
     List<Transaction> transactionList = new ArrayList<>();
 
-    when(transactionRepository.findAll()).thenReturn(transactionList);
+    when(transactionRepository.findAll(any(Sort.class))).thenReturn(transactionList.stream().sorted(Comparator.comparing(Transaction::getDate).reversed()).toList());
 
     // Act
     List<TransactionDTO> dtos = transactionService.getAll();

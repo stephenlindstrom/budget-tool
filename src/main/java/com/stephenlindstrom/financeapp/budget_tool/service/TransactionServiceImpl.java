@@ -3,6 +3,7 @@ package com.stephenlindstrom.financeapp.budget_tool.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
@@ -35,7 +36,7 @@ public class TransactionServiceImpl implements TransactionService {
 
   @Override
   public List<TransactionDTO> getAll() {
-    return transactionRepository.findAll().stream().map(this::mapToDTO).toList();
+    return transactionRepository.findAll(Sort.by(Sort.Direction.DESC, "date")).stream().map(this::mapToDTO).toList();
   } 
 
   @Override
