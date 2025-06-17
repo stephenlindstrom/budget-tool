@@ -68,12 +68,12 @@ public class TransactionControllerIntegrationTest {
 
   @Test
   void shouldReturnAllTransactions() throws Exception {
-    Category category = Category.builder()
-                          .name("Groceries")
-                          .type(TransactionType.EXPENSE)
-                          .build();
-    
-    categoryRepository.save(category);
+    Category category = categoryRepository.save(
+      Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
 
     Transaction transaction1 = Transaction.builder()
                                 .amount(BigDecimal.valueOf(100.00))
@@ -106,12 +106,12 @@ public class TransactionControllerIntegrationTest {
 
   @Test
   void shouldReturnFilteredTransactions() throws Exception {
-    Category category = Category.builder()
-                          .name("Groceries")
-                          .type(TransactionType.EXPENSE)
-                          .build();
-    
-    categoryRepository.save(category);
+    Category category = categoryRepository.save(
+      Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
 
     Transaction transaction1 = Transaction.builder()
                                 .amount(BigDecimal.valueOf(100.00))
