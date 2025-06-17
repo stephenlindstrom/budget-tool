@@ -45,6 +45,7 @@ public class TransactionControllerIntegrationTest {
   @BeforeEach
   void setUp() {
     transactionRepository.deleteAll();
+    categoryRepository.deleteAll();
   }
 
   @Test
