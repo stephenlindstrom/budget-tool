@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -143,5 +145,31 @@ public class TransactionControllerIntegrationTest {
           .andExpect(jsonPath("$.length()").value(2))
           .andExpect(jsonPath("$[0].date").value("2025-06-12"))
           .andExpect(jsonPath("$[1].date").value("2025-06-04"));
+  }
+
+  @Test
+  void shouldDeleteTransactionAndReturnNoContent() throws Exception {
+    Category category = categoryRepository.save(
+        Category.builder()
+            .name("Groceries")
+            .type(TransactionType.EXPENSE)
+            .build()
+    );
+
+
+    Transaction transaction1 = transactionRepository.save(
+      Transaction.builder()
+          .amount(BigDecimal.valueOf(100.00))
+          .category(category)
+          .type(category.getType())
+          .date(LocalDate.of(2025, 6, 12))
+          .description("Fry's")
+          .build()
+    );
+
+    mockMvc.perform(delete("/api/transactions/{id}", transaction1.getId()))
+          .andExpect(status().isNoContent());
+
+    assertFalse(transactionRepository.findById(transaction1.getId()).isPresent());
   }
 }
