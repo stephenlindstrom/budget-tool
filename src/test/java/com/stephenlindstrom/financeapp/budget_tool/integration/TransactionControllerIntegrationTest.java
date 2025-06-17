@@ -101,4 +101,47 @@ public class TransactionControllerIntegrationTest {
           .andExpect(jsonPath("$[0].description").value("Fry's"))
           .andExpect(jsonPath("$[1].amount").value(50.00));
   }
+
+  @Test
+  void shouldReturnFilteredTransactions() throws Exception {
+    Category category = Category.builder()
+                          .name("Groceries")
+                          .type(TransactionType.EXPENSE)
+                          .build();
+    
+    categoryRepository.save(category);
+
+    Transaction transaction1 = Transaction.builder()
+                                .amount(BigDecimal.valueOf(100.00))
+                                .category(category)
+                                .type(category.getType())
+                                .date(LocalDate.of(2025, 6, 12))
+                                .description("Fry's")
+                                .build();
+
+    Transaction transaction2 = Transaction.builder()
+                                .amount(BigDecimal.valueOf(50.00))
+                                .category(category)
+                                .type(category.getType())
+                                .date(LocalDate.of(2025, 6, 4))
+                                .description("Whole Foods")
+                                .build();
+
+    Transaction transaction3 = Transaction.builder()
+                                .amount(BigDecimal.valueOf(25.00))
+                                .category(category)
+                                .type(category.getType())
+                                .date(LocalDate.of(2024, 11, 23))
+                                .description("Target")
+                                .build();
+
+    transactionRepository.saveAll(List.of(transaction1, transaction2, transaction3));
+
+    mockMvc.perform(get("/api/transactions/filter")
+            .param("startDate", "2025-06-01"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.length()").value(2))
+          .andExpect(jsonPath("$[0].date").value("2025-06-12"))
+          .andExpect(jsonPath("$[1].date").value("2025-06-04"));
+  }
 }

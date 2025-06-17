@@ -1,6 +1,7 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
@@ -67,7 +68,11 @@ public class TransactionServiceImpl implements TransactionService {
               .toList();
     }
 
-    return result.stream().map(this::mapToDTO).toList();
+    return result
+            .stream()
+            .map(this::mapToDTO)
+            .sorted(Comparator.comparing(TransactionDTO::getDate).reversed())
+            .toList();
   }
 
   @Override
