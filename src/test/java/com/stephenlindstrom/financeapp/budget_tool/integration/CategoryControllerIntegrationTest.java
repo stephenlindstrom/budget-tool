@@ -76,4 +76,19 @@ public class CategoryControllerIntegrationTest {
             .andExpect(jsonPath("$[1].name").value("Salary"))
             .andExpect(jsonPath("$[1].type").value("INCOME"));
   }
+
+  @Test 
+  void shouldReturnCategoryById() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
+
+    mockMvc.perform(get("/api/categories/{id}", category.getId()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.id").value(category.getId()))
+          .andExpect(jsonPath("$.name").value("Groceries"))
+          .andExpect(jsonPath("$.type").value("EXPENSE"));
+  }
 }
