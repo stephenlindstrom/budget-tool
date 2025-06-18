@@ -104,4 +104,27 @@ public class BudgetControllerIntegrationTest {
             .andExpect(jsonPath("$[1].category.name").value("Groceries"))
             .andExpect(jsonPath("$[1].category.type").value("EXPENSE"));
   }
+
+  @Test
+  void shouldReturnBudgetById() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .build()
+    );
+
+    Budget budget = budgetRepository.save(Budget.builder()
+                      .value(BigDecimal.valueOf(500.00))
+                      .month(YearMonth.of(2025, 6))
+                      .category(category)
+                      .build()
+    );
+
+    mockMvc.perform(get("/api/budgets/{id}", budget.getId()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.value").value(500.00))
+            .andExpect(jsonPath("$.month").value("2025-06"))
+            .andExpect(jsonPath("$.category.name").value("Groceries"))
+            .andExpect(jsonPath("$.category.type").value("EXPENSE"));
+  }
 }
