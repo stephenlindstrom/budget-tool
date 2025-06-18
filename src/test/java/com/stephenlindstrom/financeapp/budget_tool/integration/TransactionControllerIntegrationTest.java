@@ -50,9 +50,16 @@ public class TransactionControllerIntegrationTest {
 
   @Test
   void shouldCreateTransactionSuccessfully() throws Exception {
+    Category category = categoryRepository.save(
+      Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
+
     TransactionCreateDTO dto = TransactionCreateDTO.builder()
                                 .amount(BigDecimal.valueOf(50.00))
-                                .categoryId(1L)
+                                .categoryId(category.getId())
                                 .type(TransactionType.EXPENSE)
                                 .date(LocalDate.of(2025, 6, 3))
                                 .description("food")
