@@ -53,10 +53,11 @@ public class BudgetServiceImplTest {
   @Test
   void testCreate_WithValidInput_ReturnsBudgetDTO() {
     // Arrange
-    BudgetCreateDTO dto = new BudgetCreateDTO();
-    dto.setValue(BigDecimal.valueOf(500.00));
-    dto.setMonth(YearMonth.of(2025, 5));
-    dto.setCategoryId(1L);
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(500.00))
+                            .month(YearMonth.of(2025, 5))
+                            .categoryId(1L)
+                            .build();
 
     Category savedCategory = Category.builder()
             .id(1L)
