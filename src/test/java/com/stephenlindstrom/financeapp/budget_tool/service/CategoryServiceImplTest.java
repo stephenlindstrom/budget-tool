@@ -36,9 +36,10 @@ public class CategoryServiceImplTest {
   @Test
   void testCreate_WithValidInput_ReturnsCategoryDTO() {
     // Arrange
-    CategoryCreateDTO dto = new CategoryCreateDTO();
-    dto.setName("Groceries");
-    dto.setType(TransactionType.EXPENSE);
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+                              .name("Groceries")
+                              .type(TransactionType.EXPENSE)
+                              .build();
 
     Category savedCategory = Category.builder()
             .id(1L)
@@ -60,9 +61,10 @@ public class CategoryServiceImplTest {
   @Test
   void testCreate_WhenRepositoryFails_ThrowsException() {
     // Arrange
-    CategoryCreateDTO dto = new CategoryCreateDTO();
-    dto.setName("Groceries");
-    dto.setType(TransactionType.EXPENSE);
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+                              .name("Groceries")
+                              .type(TransactionType.EXPENSE)
+                              .build();
 
     when(categoryRepository.save(any(Category.class)))
         .thenThrow(new RuntimeException("Database error"));
