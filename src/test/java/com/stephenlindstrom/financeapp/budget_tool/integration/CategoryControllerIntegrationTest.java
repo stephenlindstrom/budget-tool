@@ -1,7 +1,11 @@
 package com.stephenlindstrom.financeapp.budget_tool.integration;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
+import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
 @SpringBootTest
@@ -47,5 +52,28 @@ public class CategoryControllerIntegrationTest {
           .andExpect(status().isCreated())
           .andExpect(jsonPath("$.name").value("Groceries"))
           .andExpect(jsonPath("$.type").value("EXPENSE"));
+  }
+
+  @Test
+  void shouldReturnAllCategories() throws Exception {
+    Category category1 = Category.builder()
+                          .name("Groceries")
+                          .type(TransactionType.EXPENSE)
+                          .build();
+
+    Category category2 = Category.builder()
+                          .name("Salary")
+                          .type(TransactionType.INCOME)
+                          .build();
+
+    categoryRepository.saveAll(List.of(category1, category2));
+
+    mockMvc.perform(get("/api/categories"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].name").value("Groceries"))
+            .andExpect(jsonPath("$[0].type").value("EXPENSE"))
+            .andExpect(jsonPath("$[1].name").value("Salary"))
+            .andExpect(jsonPath("$[1].type").value("INCOME"));
   }
 }

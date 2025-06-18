@@ -3,6 +3,7 @@ package com.stephenlindstrom.financeapp.budget_tool.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
@@ -29,7 +30,7 @@ public class CategoryServiceImpl implements CategoryService {
 
   @Override
   public List<CategoryDTO> getAll() {
-    return categoryRepository.findAll().stream()   
+    return categoryRepository.findAll(Sort.by("name")).stream()   
             .map(this::mapToDTO)
             .toList();
   }
