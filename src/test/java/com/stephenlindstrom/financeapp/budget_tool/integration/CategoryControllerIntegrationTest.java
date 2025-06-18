@@ -1,5 +1,7 @@
 package com.stephenlindstrom.financeapp.budget_tool.integration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -90,5 +92,19 @@ public class CategoryControllerIntegrationTest {
           .andExpect(jsonPath("$.id").value(category.getId()))
           .andExpect(jsonPath("$.name").value("Groceries"))
           .andExpect(jsonPath("$.type").value("EXPENSE"));
+  }
+
+  @Test
+  void shouldDeleteCategoryByIdAndReturnNoContent() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
+
+    mockMvc.perform(delete("/api/categories/{id}", category.getId()))
+          .andExpect(status().isNoContent());
+    
+    assertFalse(categoryRepository.findById(category.getId()).isPresent());
   }
 }
