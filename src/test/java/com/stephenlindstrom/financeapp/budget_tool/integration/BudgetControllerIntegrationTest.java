@@ -1,5 +1,7 @@
 package com.stephenlindstrom.financeapp.budget_tool.integration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -157,5 +159,26 @@ public class BudgetControllerIntegrationTest {
             .andExpect(jsonPath("$[0].display").value("June 2025"))
             .andExpect(jsonPath("$[1].value").value("2025-05"))
             .andExpect(jsonPath("$[1].display").value("May 2025"));
+  }
+
+  @Test
+  void shouldDeleteBudgetAndReturnNoContent() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .build()
+    );
+
+    Budget budget = budgetRepository.save(Budget.builder()
+                      .value(BigDecimal.valueOf(500.00))
+                      .month(YearMonth.of(2025, 6))
+                      .category(category)
+                      .build()
+    );
+
+    mockMvc.perform(delete("/api/budgets/{id}", budget.getId()))
+            .andExpect(status().isNoContent());
+
+    assertFalse(budgetRepository.findById(budget.getId()).isPresent());
   }
 }
