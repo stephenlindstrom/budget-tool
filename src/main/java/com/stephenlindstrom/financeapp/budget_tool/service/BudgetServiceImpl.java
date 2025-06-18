@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
@@ -44,7 +45,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public List<BudgetDTO> getAll() {
-    return budgetRepository.findAll().stream()
+    return budgetRepository.findAll(Sort.by(Sort.Direction.DESC, "month")).stream()
       .map(this::mapToDTO)
       .toList();
   }

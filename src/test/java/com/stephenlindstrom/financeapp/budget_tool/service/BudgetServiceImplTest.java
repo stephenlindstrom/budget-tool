@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
@@ -118,7 +119,7 @@ public class BudgetServiceImplTest {
 
     List<Budget> budgetList = new ArrayList<>(Arrays.asList(savedBudget1, savedBudget2));
 
-    when(budgetRepository.findAll()).thenReturn(budgetList);
+    when(budgetRepository.findAll(any(Sort.class))).thenReturn(budgetList);
 
     // Act
     List<BudgetDTO> dtos = budgetService.getAll();
@@ -144,7 +145,7 @@ public class BudgetServiceImplTest {
     // Arrange
     List<Budget> budgetList = new ArrayList<>();
 
-    when(budgetRepository.findAll()).thenReturn(budgetList);
+    when(budgetRepository.findAll(any(Sort.class))).thenReturn(budgetList);
 
     // Act
     List<BudgetDTO> dtos = budgetService.getAll();
