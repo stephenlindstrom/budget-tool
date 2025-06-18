@@ -360,12 +360,12 @@ public class BudgetServiceImplTest {
 
     // Assert
     assertEquals(3, result.size());
-    assertEquals("2025-03", result.get(0).getValue());
-    assertEquals("March 2025", result.get(0).getDisplay());
+    assertEquals("2025-05", result.get(0).getValue());
+    assertEquals("May 2025", result.get(0).getDisplay());
     assertEquals("2025-04", result.get(1).getValue());
     assertEquals("April 2025", result.get(1).getDisplay());
-    assertEquals("2025-05", result.get(2).getValue());
-    assertEquals("May 2025", result.get(2).getDisplay());
+    assertEquals("2025-03", result.get(2).getValue());
+    assertEquals("March 2025", result.get(2).getDisplay());
   }
 
   @Test

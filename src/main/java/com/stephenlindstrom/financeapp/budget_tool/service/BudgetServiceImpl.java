@@ -3,6 +3,7 @@ package com.stephenlindstrom.financeapp.budget_tool.service;
 import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,7 +103,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public List<MonthDTO> getAvailableMonths() {
-    return budgetRepository.findDistinctMonths().stream().map(this::mapToDTO).toList();
+    return budgetRepository.findDistinctMonths().stream().sorted(Comparator.reverseOrder()).map(this::mapToDTO).toList();
   }
   
 
