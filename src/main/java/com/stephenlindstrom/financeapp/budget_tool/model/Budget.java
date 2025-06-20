@@ -20,9 +20,11 @@ public class Budget {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(name = "budget_value")
   private BigDecimal value;
 
   @Convert(converter = YearMonthConverter.class)
+  @Column(name = "budget_month")
   private YearMonth month;
 
   @JsonIgnore

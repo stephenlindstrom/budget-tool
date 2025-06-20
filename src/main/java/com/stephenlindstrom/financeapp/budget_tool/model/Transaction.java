@@ -34,6 +34,7 @@ public class Transaction {
   @Enumerated(EnumType.STRING)
   private TransactionType type;
 
+  @Column(name="transaction_date")
   private LocalDate date;
 
   private String description;
