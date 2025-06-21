@@ -1,83 +1,104 @@
 # 💰 Personal Finance Tracker
 
-A full-stack personal finance web application that helps users track income, expenses, and budgets using a clean and intuitive interface. Built with **Java (Spring Boot)** on the backend and **React** on the frontend.
+A full-stack personal finance web application that enables users to track income, expenses, and budgets through a simple, intuitive interface. The backend is built with **Java (Spring Boot)**, while a **React** frontend is planned but not yet implemented.
 
 ---
 
-## 📌 Features (MVP)
+## ✅ Current Features
 
-- User authentication with JWT (signup, login, logout)
-- Add, edit, and delete income and expense transactions
-- Categorize transactions (e.g. Rent, Groceries, Salary)
-- Dashboard with:
-  - Monthly income vs. expenses
-  - Expense breakdown by category (pie chart)
-  - Expense trends over time (bar/line chart)
-- Filter transactions by date or category
-- Secure, mobile-responsive UI
+* Add and delete income and expense transactions
+* Categorize transactions (e.g., Groceries, Utilities, Salary)
+* Set monthly budgets per category
+* View and filter transactions by type, category, and date range
+* Get a list of all available months with budgets
+* Data persisted in a PostgreSQL database
+* Full unit tests for services and integration tests for all controllers
 
 ---
 
 ## 🔧 Tech Stack
 
-### Frontend
-- React
-- Axios
-- Tailwind CSS or Material UI (TBD)
-- Recharts or Chart.js
-
 ### Backend
-- Java 17
-- Spring Boot
-- Spring Security + JWT
-- Spring Data JPA
-- PostgreSQL
 
-### DevOps / Tools
-- Git + GitHub
-- Docker (planned)
-- GitHub Actions (planned)
-- Vercel (frontend deployment)
-- Render or Railway (backend deployment)
+* Java 17
+* Spring Boot
+* Spring Data JPA
+* PostgreSQL
+* JUnit 5 (unit and integration testing)
+* MockMvc + Mockito
 
----
+### Frontend *(In Progress / Planned)*
 
-## 🚧 Planned Features
+* React
+* Axios
+* Material UI
 
-- Set budgets by category and track progress
-- Recurring transactions (e.g., subscriptions, rent)
-- CSV export/import
-- Receipt upload (image or PDF)
-- Email notifications for upcoming bills or overspending
-- AI budgeting suggestions (GPT API integration)
+### Dev Tools
+
+* Git + GitHub
+* VS Code
+* PostgreSQL (local dev)
+* Docker (planned)
+* CI/CD via GitHub Actions (planned)
 
 ---
 
-## ☁️ Future Architecture (Microservices Phase)
+## 📌 Planned Features
 
-This app will evolve into a microservices architecture to demonstrate scalable system design:
+* JWT-based user authentication (signup/login/logout)
+* Responsive frontend dashboard
 
-- `User Service` – auth, user profile
-- `Transaction Service` – expense/income management
-- `Analytics Service` – trends, budgeting, insights
-- `Notification Service` – reminders via email/SMS
-
-Each service will run independently, containerized with **Docker**, and orchestrated with **Docker Compose** or deployed to **cloud platforms** like AWS, GCP, or Render.
+  * Monthly income vs. expense summary
+  * Category breakdown charts (pie, bar, etc.)
+* Recurring transactions (subscriptions, rent, etc.)
+* CSV import/export
+* Cloud deployment via Render
 
 ---
 
-## 📂 Folder Structure (Initial Monolith)
+## 🗪 Testing Coverage
+
+* ✅ **Unit Tests**: All service layers tested with JUnit + Mockito
+* ✅ **Integration Tests**: All controller endpoints tested using MockMvc with H2 test database
+* ✅ Focus on reliability, maintainability, and real-world behavior validation
+
+---
+
+## 📂 Folder Structure
 
 ```bash
-project-root/
-│
-├── backend/         # Spring Boot application
-│   ├── src/main/java/com/yourapp/...
-│   └── resources/application.properties
-│
-├── frontend/        # React application
+budget-tool/
+├── .gitignore
+├── README.md
+├── backend/
+│   ├── pom.xml
 │   └── src/
-│       ├── components/
-│       ├── pages/
-│       ├── services/
-│       └── context/
+│       ├── main/
+│       │   ├── java/
+│       │   │   └── com/
+│       │   │       └── stephenlindstrom/
+│       │   │           └── financeapp/
+│       │   │               └── budget_tool/
+│       │   │                   ├── config/
+│       │   │                   ├── controller/
+│       │   │                   ├── converter/
+│       │   │                   ├── dto/
+│       │   │                   ├── enums/
+│       │   │                   ├── errors/
+│       │   │                   ├── model/
+│       │   │                   ├── repository/
+│       │   │                   └── service/
+│       │   └── resources/
+│       │       └── application.properties
+│       └── test/
+│           ├── java/
+│           │   └── com/
+│           │       └── stephenlindstrom/
+│           │           └── financeapp/
+│           │               └── budget_tool/
+│           │                   ├── integration/
+│           │                   └── service/
+│           └── resources/
+│               └── application-test.properties
+
+```
