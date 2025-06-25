@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.lang.module.ResolutionException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
+import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -186,6 +189,26 @@ public class CategoryServiceImplTest {
     assertEquals(TransactionType.INCOME, result.getType());
 
     verify(categoryRepository).save(any(Category.class));
+  }
+
+  @Test
+  void testUpdateById_CategoryDoesNotExist_ThrowsResourceNotFoundException() {
+    // Arrange
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+            .name("Salary")
+            .type(TransactionType.INCOME)
+            .build();
+
+    when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // Act and Assert
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+      categoryService.updateById(1L, dto);
+    });
+
+    assertEquals("Category not found", exception.getMessage());
+
+    verify(categoryRepository, never()).save(any(Category.class));
   }
 
   @Test
