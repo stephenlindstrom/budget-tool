@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -241,6 +242,26 @@ public class BudgetServiceImplTest {
     assertEquals(1L, result.getCategory().getId());
 
     verify(budgetRepository).save(any(Budget.class));
+  }
+
+  @Test
+  void testUpdateById_IdDoesNotExist_ThrowsResourceNotFoundException() {
+    // Arrange
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(300.00))
+                            .month(YearMonth.of(2025, 4))
+                            .categoryId(1L)
+                            .build();
+    
+    when(budgetRepository.findById(1L)).thenReturn(Optional.empty());
+    
+    // Act and Assert
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+      budgetService.updateById(1L, dto);
+    });
+
+    assertEquals("Budget not found", exception.getMessage());
+    verifyNoInteractions(categoryRepository);
   }
 
   @Test
