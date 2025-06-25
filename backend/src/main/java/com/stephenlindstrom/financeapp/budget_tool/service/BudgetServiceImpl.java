@@ -57,6 +57,23 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
+  public BudgetDTO updateById(Long id, BudgetCreateDTO dto) {
+     Budget budget = budgetRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
+      
+    Category category = categoryRepository.findById(dto.getCategoryId())
+        .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+      
+    budget.setValue(dto.getValue());
+    budget.setMonth(dto.getMonth());
+    budget.setCategory(category);
+    
+    Budget updatedBudget = budgetRepository.save(budget);
+
+    return mapToDTO(updatedBudget);
+  }
+
+  @Override
   public void deleteById(Long id) {
     budgetRepository.deleteById(id);
   }

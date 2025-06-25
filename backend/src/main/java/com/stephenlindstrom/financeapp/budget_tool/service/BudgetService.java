@@ -13,6 +13,7 @@ public interface BudgetService {
   BudgetDTO create(BudgetCreateDTO dto);
   List<BudgetDTO> getAll();
   Optional<BudgetDTO> getById(Long id);
+  BudgetDTO updateById(Long id, BudgetCreateDTO dto);
   void deleteById(Long id);
   boolean existsByCategoryIdAndMonth(Long categoryId, YearMonth month);
   BudgetSummaryDTO getBudgetSummary(Long id);
