@@ -155,6 +155,40 @@ public class CategoryServiceImplTest {
   }
 
   @Test
+  void testUpdateById_CategoryExists_ReturnsCategoryDTO() {
+    // Arrange
+    Category existingCategory = Category.builder()
+            .id(1L)
+            .name("Groceries")
+            .type(TransactionType.EXPENSE)
+            .build();
+    
+    Category updatedCategory = Category.builder()
+            .id(1L)
+            .name("Salary")
+            .type(TransactionType.INCOME)
+            .build();
+
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+            .name("Salary")
+            .type(TransactionType.INCOME)
+            .build();
+
+    when(categoryRepository.findById(1L)).thenReturn(Optional.of(existingCategory));
+    when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
+
+    // Act
+    CategoryDTO result = categoryService.updateById(1L, dto);
+
+    // Assert
+    assertEquals(1L, result.getId());
+    assertEquals("Salary", result.getName());
+    assertEquals(TransactionType.INCOME, result.getType());
+
+    verify(categoryRepository).save(any(Category.class));
+  }
+
+  @Test
   void testDeleteById_IdExists_NoReturnValue() {
     // Act
     categoryService.deleteById(1L);
