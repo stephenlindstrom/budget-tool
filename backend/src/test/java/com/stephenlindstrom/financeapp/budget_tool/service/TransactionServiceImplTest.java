@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -379,6 +380,29 @@ public class TransactionServiceImplTest {
     assertEquals("Job", result.getDescription());
 
     verify(transactionRepository).save(any(Transaction.class));
+  }
+
+  @Test
+  void testUpdateById_TransactionDoesNotExist_ThrowsResourceNotFoundException() {
+    // Arrange
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+        .amount(BigDecimal.valueOf(1200.00))
+        .categoryId(2L)
+        .type(TransactionType.INCOME)
+        .date(LocalDate.of(2024, 4, 23))
+        .description("Job")
+        .build();
+
+    when(transactionRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // Act and Assert
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+      transactionService.updateById(1L, dto);
+    });
+    
+    assertEquals("Transaction not found", exception.getMessage());
+
+    verifyNoInteractions(categoryRepository);
   }
 
   @Test
