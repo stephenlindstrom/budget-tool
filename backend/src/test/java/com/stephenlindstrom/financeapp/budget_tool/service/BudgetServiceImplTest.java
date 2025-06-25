@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -245,7 +246,7 @@ public class BudgetServiceImplTest {
   }
 
   @Test
-  void testUpdateById_IdDoesNotExist_ThrowsResourceNotFoundException() {
+  void testUpdateById_BudgetDoesNotExist_ThrowsResourceNotFoundException() {
     // Arrange
     BudgetCreateDTO dto = BudgetCreateDTO.builder()
                             .value(BigDecimal.valueOf(300.00))
@@ -262,6 +263,40 @@ public class BudgetServiceImplTest {
 
     assertEquals("Budget not found", exception.getMessage());
     verifyNoInteractions(categoryRepository);
+  }
+
+  @Test 
+  void testUpdateById_CategoryDoesNotExist_ThrowsResourceNotFoundException() {
+    // Arrange
+    Category unrelatedCategory = Category.builder()
+            .id(2L)
+            .name("Groceries")
+            .type(TransactionType.EXPENSE)
+            .build();
+
+    Budget existingBudget = Budget.builder()
+          .id(1L)
+          .value(BigDecimal.valueOf(500.00))
+          .month(YearMonth.of(2025, 5))
+          .category(unrelatedCategory)
+          .build();
+
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(300.00))
+                            .month(YearMonth.of(2025, 4))
+                            .categoryId(1L)
+                            .build();
+    
+    when(budgetRepository.findById(1L)).thenReturn(Optional.of(existingBudget));
+    when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // Act and Assert
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+      budgetService.updateById(1L, dto);
+    });
+
+    assertEquals("Category not found", exception.getMessage());
+    verify(budgetRepository, never()).save(any());
   }
 
   @Test
