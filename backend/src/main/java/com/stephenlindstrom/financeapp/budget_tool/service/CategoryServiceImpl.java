@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
+import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -39,6 +40,19 @@ public class CategoryServiceImpl implements CategoryService {
   public Optional<CategoryDTO> getById(Long id) {
     return categoryRepository.findById(id)
             .map(this::mapToDTO);
+  }
+
+  @Override
+  public CategoryDTO updateById(Long id, CategoryCreateDTO dto) {
+    Category category = categoryRepository.findById(id)
+      .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+    category.setName(dto.getName());
+    category.setType(dto.getType());
+
+    Category updatedCategory = categoryRepository.save(category);
+
+    return mapToDTO(updatedCategory);
   }
 
   @Override

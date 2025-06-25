@@ -11,6 +11,7 @@ public interface CategoryService {
   CategoryDTO create(CategoryCreateDTO dto);
   List<CategoryDTO> getAll();
   Optional<CategoryDTO> getById(Long id);
+  CategoryDTO updateById(Long id, CategoryCreateDTO dto);
   void deleteById(Long id);
   boolean existsByNameIgnoreCase(String name);
   List<CategoryDTO> getByType(TransactionType type);
