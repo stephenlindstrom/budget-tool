@@ -199,6 +199,51 @@ public class BudgetServiceImplTest {
   }
 
   @Test
+  void testUpdateById_IdExists_ReturnsBudgetDTO() {
+    // Arrange
+    Category category = Category.builder()
+            .id(1L)
+            .name("Groceries")
+            .type(TransactionType.EXPENSE)
+            .build();
+
+    Budget existingBudget = Budget.builder()
+          .id(1L)
+          .value(BigDecimal.valueOf(500.00))
+          .month(YearMonth.of(2025, 5))
+          .category(category)
+          .build();
+    
+    Budget updatedBudget = Budget.builder()
+          .id(1L)
+          .value(BigDecimal.valueOf(300.00))
+          .month(YearMonth.of(2025, 4))
+          .category(category)
+          .build();
+
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(300.00))
+                            .month(YearMonth.of(2025, 4))
+                            .categoryId(1L)
+                            .build();
+
+    when(budgetRepository.findById(1L)).thenReturn(Optional.of(existingBudget));
+    when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+    when(budgetRepository.save(any(Budget.class))).thenReturn(updatedBudget);
+
+    // Act
+    BudgetDTO result = budgetService.updateById(1L, dto);
+
+    // Assert
+    assertEquals(1L, result.getId());
+    assertEquals(BigDecimal.valueOf(300.00), result.getValue());
+    assertEquals(YearMonth.of(2025, 4), result.getMonth());
+    assertEquals(1L, result.getCategory().getId());
+
+    verify(budgetRepository).save(any(Budget.class));
+  }
+
+  @Test
   void testDeleteById_WithValidId_NoReturnValue() {
     // Act
     budgetService.deleteById(1L);
