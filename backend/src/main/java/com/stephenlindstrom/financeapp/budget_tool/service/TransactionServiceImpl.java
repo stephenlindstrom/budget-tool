@@ -76,6 +76,25 @@ public class TransactionServiceImpl implements TransactionService {
   }
 
   @Override
+  public TransactionDTO updateById(Long id, TransactionCreateDTO dto) {
+    Transaction transaction = transactionRepository.findById(id)
+      .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+
+    Category category = categoryRepository.findById(dto.getCategoryId())
+      .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+    transaction.setAmount(dto.getAmount());
+    transaction.setCategory(category);
+    transaction.setType(dto.getType());
+    transaction.setDate(dto.getDate());
+    transaction.setDescription(dto.getDescription());
+
+    Transaction updatedTransaction = transactionRepository.save(transaction);
+
+    return mapToDTO(updatedTransaction);
+  }
+
+  @Override
   public void deleteById(Long id) {
     transactionRepository.deleteById(id);
   }

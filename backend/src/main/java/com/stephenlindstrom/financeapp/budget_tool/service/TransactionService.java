@@ -10,5 +10,6 @@ public interface TransactionService {
   TransactionDTO save(TransactionCreateDTO dto);
   List<TransactionDTO> getAll();
   List<TransactionDTO> filter(TransactionFilter filter);
+  TransactionDTO updateById(Long id, TransactionCreateDTO dto);
   void deleteById(Long id);
 }
