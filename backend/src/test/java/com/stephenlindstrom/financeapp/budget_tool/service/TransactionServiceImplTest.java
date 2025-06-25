@@ -321,6 +321,67 @@ public class TransactionServiceImplTest {
   }
 
   @Test
+  void testUpdateById_WithExistingTransaction_ReturnsTransactionDTO() {
+    // Arrange
+    TransactionType type1 = TransactionType.EXPENSE;
+    TransactionType type2 = TransactionType.INCOME;
+
+    Category category1 = Category.builder()
+        .id(1L)
+        .name("Groceries")
+        .type(type1)
+        .build();
+
+     Category category2 = Category.builder()
+        .id(2L)
+        .name("Salary")
+        .type(type2)
+        .build();
+    
+    Transaction existingTransaction = Transaction.builder()
+        .id(1L)
+        .amount(BigDecimal.valueOf(100.00))
+        .category(category1)
+        .type(type1)
+        .date(LocalDate.of(2025, 6, 24))
+        .description("Fry's")
+        .build();
+    
+    Transaction updatedTransaction = Transaction.builder()
+        .id(1L)
+        .amount(BigDecimal.valueOf(1200.00))
+        .category(category2)
+        .type(type2)
+        .date(LocalDate.of(2024, 4, 23))
+        .description("Job")
+        .build();
+
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+        .amount(BigDecimal.valueOf(1200.00))
+        .categoryId(category2.getId())
+        .type(type2)
+        .date(LocalDate.of(2024, 4, 23))
+        .description("Job")
+        .build();
+
+    when(transactionRepository.findById(1L)).thenReturn(Optional.of(existingTransaction));
+    when(categoryRepository.findById(dto.getCategoryId())).thenReturn(Optional.of(category2));
+    when(transactionRepository.save(any(Transaction.class))).thenReturn(updatedTransaction);
+    // Act
+    TransactionDTO result = transactionService.updateById(1L, dto);
+
+    // Assert
+    assertEquals(1L, result.getId());
+    assertEquals(BigDecimal.valueOf(1200.00), result.getAmount());
+    assertEquals(2L, result.getCategory().getId());
+    assertEquals(TransactionType.INCOME, result.getType());
+    assertEquals(LocalDate.of(2024, 4, 23), result.getDate());
+    assertEquals("Job", result.getDescription());
+
+    verify(transactionRepository).save(any(Transaction.class));
+  }
+
+  @Test
   void testDeleteById_WithValidId_NoReturnValue() {
     // Act
     transactionService.deleteById(1L);
