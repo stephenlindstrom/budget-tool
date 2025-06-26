@@ -406,6 +406,47 @@ public class TransactionServiceImplTest {
   }
 
   @Test
+  void testUpdateById_CategoryDoesNotExist_ThrowsResourceNotFoundException() {
+    // Arrange
+    Category category = Category.builder()
+        .id(1L)
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build();
+
+    Transaction existingTransaction = Transaction.builder()
+        .id(1L)
+        .amount(BigDecimal.valueOf(100.00))
+        .category(category)
+        .type(TransactionType.EXPENSE)
+        .date(LocalDate.of(2025, 6, 24))
+        .description("Fry's")
+        .build();
+
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+        .amount(BigDecimal.valueOf(1200.00))
+        .categoryId(2L)
+        .type(TransactionType.INCOME)
+        .date(LocalDate.of(2024, 4, 23))
+        .description("Job")
+        .build();
+
+    when(transactionRepository.findById(1L)).thenReturn(Optional.of(existingTransaction));
+    when(categoryRepository.findById(2L)).thenReturn(Optional.empty());
+
+    // Act and Assert
+    ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+      transactionService.updateById(1L, dto);
+    });
+    
+    verify(categoryRepository).findById(2L);
+
+    assertEquals("Category not found", exception.getMessage());
+
+    verify(transactionRepository, never()).save(any(Transaction.class));
+  }
+
+  @Test
   void testDeleteById_WithValidId_NoReturnValue() {
     // Act
     transactionService.deleteById(1L);
