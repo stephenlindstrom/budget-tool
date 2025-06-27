@@ -237,6 +237,33 @@ public class BudgetControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenUpdatingWithInvalidCategoryId() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .build()
+    );
+
+    Budget budget = budgetRepository.save(Budget.builder()
+                      .value(BigDecimal.valueOf(500.00))
+                      .month(YearMonth.of(2025, 5))
+                      .category(category)
+                      .build()
+    );
+
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(100.00))
+                            .month(YearMonth.of(2025, 6))
+                            .categoryId(999L)
+                            .build();
+
+    mockMvc.perform(put("/api/budgets/{id}", budget.getId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
   void shouldDeleteBudgetAndReturnNoContent() throws Exception {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
