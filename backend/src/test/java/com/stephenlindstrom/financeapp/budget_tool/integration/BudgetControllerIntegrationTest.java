@@ -203,6 +203,27 @@ public class BudgetControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenUpdatingNonExistentBudget() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .build()
+    );
+
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(100.00))
+                            .month(YearMonth.of(2025, 6))
+                            .categoryId(category.getId())
+                            .build();
+
+    mockMvc.perform(put("/api/budgets/{id}", 999L)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isNotFound());
+  }
+
+
+  @Test
   void shouldDeleteBudgetAndReturnNoContent() throws Exception {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
