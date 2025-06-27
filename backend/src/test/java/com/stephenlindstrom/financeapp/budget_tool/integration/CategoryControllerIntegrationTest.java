@@ -60,6 +60,19 @@ public class CategoryControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn400WhenCreatingCategoryWithInvalidInput() throws Exception {
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+                              .name(null)
+                              .type(null)
+                              .build();
+
+    mockMvc.perform(post("/api/categories")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void shouldReturnAllCategories() throws Exception {
     Category category1 = Category.builder()
                           .name("Groceries")
