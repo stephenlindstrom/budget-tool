@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -94,6 +95,28 @@ public class CategoryControllerIntegrationTest {
           .andExpect(jsonPath("$.id").value(category.getId()))
           .andExpect(jsonPath("$.name").value("Groceries"))
           .andExpect(jsonPath("$.type").value("EXPENSE"));
+  }
+
+  @Test
+  void shouldUpdateCategoryById() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
+
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+                              .name("Salary")
+                              .type(TransactionType.INCOME)
+                              .build();
+
+    mockMvc.perform(put("/api/categories/{id}", category.getId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(category.getId()))
+            .andExpect(jsonPath("$.name").value("Salary"))
+            .andExpect(jsonPath("$.type").value("INCOME"));
   }
 
   @Test
