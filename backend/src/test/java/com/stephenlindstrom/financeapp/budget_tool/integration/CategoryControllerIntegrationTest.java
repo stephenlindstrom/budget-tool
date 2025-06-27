@@ -111,6 +111,12 @@ public class CategoryControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenGettingNonExistentCategory() throws Exception {
+    mockMvc.perform(get("/api/categories/{id}", 999L))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
   void shouldUpdateCategoryById() throws Exception {
     Category category = categoryRepository.save(Category.builder()
         .name("Groceries")
