@@ -78,6 +78,22 @@ public class TransactionControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn400WhenCreatingTransactionWithInvalidInput() throws Exception {
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+                                .amount(null)
+                                .categoryId(null)
+                                .type(null)
+                                .date(null)
+                                .description(null)
+                                .build();
+
+    mockMvc.perform(post("/api/transactions")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void shouldReturnAllTransactions() throws Exception {
     Category category = categoryRepository.save(
       Category.builder()
