@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -89,7 +90,24 @@ public class BudgetController {
   @GetMapping("/months")
   public ResponseEntity<List<MonthDTO>> getAvailableMonths() {
     return ResponseEntity.ok(budgetService.getAvailableMonths());
-  } 
+  }
+  
+  @Operation(
+    summary = "Update a budget by ID",
+    description = "Updates an existing budget with the specified ID"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Budget updated successfully"),
+    @ApiResponse(responseCode = "404", description = "Budget not found"),
+    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
+  @PutMapping("/{id}")
+  public ResponseEntity<BudgetDTO> updateById(@PathVariable Long id, @RequestBody @Valid BudgetCreateDTO dto) {
+    BudgetDTO updated = budgetService.updateById(id, dto);
+    return ResponseEntity.ok(updated);
+}
+
 
   @Operation(
     summary = "Delete a budget by ID",
