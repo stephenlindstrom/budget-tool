@@ -139,6 +139,19 @@ public class CategoryControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenUpdatingNonExistentCategory() throws Exception {
+    CategoryCreateDTO dto = CategoryCreateDTO.builder()
+                              .name("Salary")
+                              .type(TransactionType.INCOME)
+                              .build();
+
+    mockMvc.perform(put("/api/categories/{id}", 999L)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isNotFound()); 
+  }
+
+  @Test
   void shouldDeleteCategoryByIdAndReturnNoContent() throws Exception {
     Category category = categoryRepository.save(Category.builder()
         .name("Groceries")
