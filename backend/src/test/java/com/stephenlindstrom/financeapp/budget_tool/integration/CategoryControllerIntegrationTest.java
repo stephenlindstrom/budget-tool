@@ -164,4 +164,10 @@ public class CategoryControllerIntegrationTest {
     
     assertFalse(categoryRepository.findById(category.getId()).isPresent());
   }
+
+  @Test
+  void shouldReturnNoContentWhenDeletingNonExistentCategory() throws Exception {
+    mockMvc.perform(delete("/api/categories/{id}", 999L))
+            .andExpect(status().isNoContent());
+  }
 }
