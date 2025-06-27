@@ -115,7 +115,6 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Budget deleted successfully"),
-    @ApiResponse(responseCode = "404", description = "Budget not found"),
     @ApiResponse(responseCode = "500", description = "Server error")
   })
   @DeleteMapping("/{id}")

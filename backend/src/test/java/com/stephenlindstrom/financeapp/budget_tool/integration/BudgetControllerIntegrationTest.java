@@ -256,4 +256,10 @@ public class BudgetControllerIntegrationTest {
 
     assertFalse(budgetRepository.findById(budget.getId()).isPresent());
   }
+
+  @Test
+  void shouldReturnNoContentWhenDeletingNonExistentBudget() throws Exception {
+    mockMvc.perform(delete("/api/budgets/{id}", 999L))
+            .andExpect(status().isNoContent());
+  }
 }
