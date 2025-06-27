@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -155,6 +156,55 @@ public class TransactionControllerIntegrationTest {
           .andExpect(jsonPath("$.length()").value(2))
           .andExpect(jsonPath("$[0].date").value("2025-06-12"))
           .andExpect(jsonPath("$[1].date").value("2025-06-04"));
+  }
+
+  @Test 
+  void shouldUpdateTransactionById() throws Exception {
+    Category category1 = categoryRepository.save(
+      Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
+
+    Category category2 = categoryRepository.save(
+      Category.builder()
+        .name("Salary")
+        .type(TransactionType.INCOME)
+        .build()
+    );
+
+
+
+    Transaction transaction = transactionRepository.save(
+      Transaction.builder()
+        .amount(BigDecimal.valueOf(100.00))
+        .category(category1)
+        .type(TransactionType.EXPENSE)
+        .date(LocalDate.of(2025, 5, 31))
+        .description("Fry's")
+        .build() 
+    );
+
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+                                .amount(BigDecimal.valueOf(50.00))
+                                .categoryId(category2.getId())
+                                .type(TransactionType.INCOME)
+                                .date(LocalDate.of(2025, 6, 3))
+                                .description("Paycheck")
+                                .build();
+    
+    mockMvc.perform(put("/api/transactions/{id}", transaction.getId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(transaction.getId()))
+            .andExpect(jsonPath("$.amount").value(50.00))
+            .andExpect(jsonPath("$.category.name").value("Salary"))
+            .andExpect(jsonPath("$.category.type").value("INCOME"))
+            .andExpect(jsonPath("$.type").value("INCOME"))
+            .andExpect(jsonPath("$.date").value("2025-06-03"))
+            .andExpect(jsonPath("$.description").value("Paycheck"));   
   }
 
   @Test
