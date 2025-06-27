@@ -247,6 +247,39 @@ public class TransactionControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenUpdatingWithInvalidCategoryId() throws Exception {
+    Category category = categoryRepository.save(
+      Category.builder()
+        .name("Groceries")
+        .type(TransactionType.EXPENSE)
+        .build()
+    );
+
+    Transaction transaction = transactionRepository.save(
+      Transaction.builder()
+        .amount(BigDecimal.valueOf(100.00))
+        .category(category)
+        .type(TransactionType.EXPENSE)
+        .date(LocalDate.of(2025, 5, 31))
+        .description("Fry's")
+        .build() 
+    );
+
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+                                .amount(BigDecimal.valueOf(50.00))
+                                .categoryId(999L)
+                                .type(TransactionType.INCOME)
+                                .date(LocalDate.of(2025, 6, 3))
+                                .description("Invalid category test")
+                                .build();
+    
+    mockMvc.perform(put("/api/transactions/{id}", transaction.getId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
   void shouldDeleteTransactionAndReturnNoContent() throws Exception {
     Category category = categoryRepository.save(
         Category.builder()
