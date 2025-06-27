@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -161,6 +162,37 @@ public class BudgetControllerIntegrationTest {
             .andExpect(jsonPath("$[0].display").value("June 2025"))
             .andExpect(jsonPath("$[1].value").value("2025-05"))
             .andExpect(jsonPath("$[1].display").value("May 2025"));
+  }
+
+  @Test
+  void shouldUpdateBudgetById() throws Exception {
+    Category category = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .build()
+    );
+    
+    Budget budget = budgetRepository.save(Budget.builder()
+                      .value(BigDecimal.valueOf(500.00))
+                      .month(YearMonth.of(2025, 5))
+                      .category(category)
+                      .build()
+    );
+
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(BigDecimal.valueOf(100.00))
+                            .month(YearMonth.of(2025, 6))
+                            .categoryId(category.getId())
+                            .build();
+    
+    mockMvc.perform(put("/api/budgets/{id}", budget.getId())
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.value").value(100.00))
+            .andExpect(jsonPath("$.month").value("2025-06"))
+            .andExpect(jsonPath("$.category.name").value("Groceries"))
+            .andExpect(jsonPath("$.category.type").value("EXPENSE"));
   }
 
   @Test
