@@ -189,6 +189,7 @@ public class BudgetControllerIntegrationTest {
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(budget.getId()))
             .andExpect(jsonPath("$.value").value(100.00))
             .andExpect(jsonPath("$.month").value("2025-06"))
             .andExpect(jsonPath("$.category.name").value("Groceries"))
