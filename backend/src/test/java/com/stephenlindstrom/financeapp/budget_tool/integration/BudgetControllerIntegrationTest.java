@@ -76,6 +76,20 @@ public class BudgetControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn400WhenCreatingBudgetWithInvalidInput() throws Exception {
+    BudgetCreateDTO dto = BudgetCreateDTO.builder()
+                            .value(null)
+                            .month(null)
+                            .categoryId(null)
+                            .build();
+
+    mockMvc.perform(post("/api/budgets")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void shouldReturnAllBudgets() throws Exception {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
@@ -221,7 +235,6 @@ public class BudgetControllerIntegrationTest {
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isNotFound());
   }
-
 
   @Test
   void shouldDeleteBudgetAndReturnNoContent() throws Exception {
