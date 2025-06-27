@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -73,6 +74,22 @@ public class TransactionController {
   public ResponseEntity<List<TransactionDTO>> filter(@ModelAttribute TransactionFilter filter) {
     List<TransactionDTO> results = transactionService.filter(filter);
     return ResponseEntity.ok(results);
+  }
+
+  @Operation(
+    summary = "Update a transaction by ID",
+    description = "Updates an existing transaction with the specified ID"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Transaction updated successfully"),
+    @ApiResponse(responseCode = "404", description = "Transaction or category not found"),
+    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
+  @PutMapping("/{id}")
+  public ResponseEntity<TransactionDTO> updateById(@PathVariable Long id, @RequestBody @Valid TransactionCreateDTO dto) {
+    TransactionDTO updated = transactionService.updateById(id, dto);
+    return ResponseEntity.ok(updated);
   }
 
   @Operation(
