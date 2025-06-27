@@ -271,4 +271,10 @@ public class TransactionControllerIntegrationTest {
 
     assertFalse(transactionRepository.findById(transaction1.getId()).isPresent());
   }
+
+  @Test
+  void shouldReturnNoContentWhenDeletingNonExistentTransaction() throws Exception {
+    mockMvc.perform(delete("/api/transactions/{id}", 999L))
+            .andExpect(status().isNoContent());
+  }
 }
