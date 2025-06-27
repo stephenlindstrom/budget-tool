@@ -98,7 +98,7 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budget updated successfully"),
-    @ApiResponse(responseCode = "404", description = "Budget not found"),
+    @ApiResponse(responseCode = "404", description = "Budget or category not found"),
     @ApiResponse(responseCode = "400", description = "Invalid input data"),
     @ApiResponse(responseCode = "500", description = "Server error")
   })

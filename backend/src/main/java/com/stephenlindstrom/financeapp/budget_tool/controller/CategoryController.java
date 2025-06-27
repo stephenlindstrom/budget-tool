@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -75,6 +76,22 @@ public class CategoryController {
     return categoryService.getById(id)
           .map(ResponseEntity::ok)
           .orElse(ResponseEntity.notFound().build());
+  }
+
+  @Operation(
+    summary = "Update a category by ID",
+    description = "Updates an existing category with the specified ID"
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Category updated successfully"),
+    @ApiResponse(responseCode = "404", description = "Category not found"),
+    @ApiResponse(responseCode = "400", description = "Invalid input data"),
+    @ApiResponse(responseCode = "500", description = "Server error")
+  })
+  @PutMapping("/{id}")
+  public ResponseEntity<CategoryDTO> updateById(@PathVariable Long id, @RequestBody @Valid CategoryCreateDTO dto) {
+    CategoryDTO updated = categoryService.updateById(id, dto);
+    return ResponseEntity.ok(updated);
   }
 
   @Operation(
