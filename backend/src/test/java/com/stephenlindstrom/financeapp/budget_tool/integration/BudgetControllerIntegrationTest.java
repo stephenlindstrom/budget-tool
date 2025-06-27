@@ -134,6 +134,12 @@ public class BudgetControllerIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenGettingNonExistentBudget() throws Exception {
+    mockMvc.perform(get("/api/budgets/{id}", 999L))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
   void shouldReturnAvailableMonths() throws Exception {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
