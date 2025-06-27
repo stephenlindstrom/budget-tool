@@ -223,6 +223,29 @@ public class TransactionControllerIntegrationTest {
             .andExpect(jsonPath("$.description").value("Paycheck"));   
   }
 
+  @Test 
+  void shouldReturn404WhenUpdatingNonExistentTransaction() throws Exception {
+    Category category = categoryRepository.save(
+      Category.builder()
+        .name("Salary")
+        .type(TransactionType.INCOME)
+        .build()
+    );
+
+    TransactionCreateDTO dto = TransactionCreateDTO.builder()
+                                .amount(BigDecimal.valueOf(50.00))
+                                .categoryId(category.getId())
+                                .type(TransactionType.INCOME)
+                                .date(LocalDate.of(2025, 6, 3))
+                                .description("Paycheck")
+                                .build();
+
+    mockMvc.perform(put("/api/transactions/{id}", 999L)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isNotFound());
+  }
+
   @Test
   void shouldDeleteTransactionAndReturnNoContent() throws Exception {
     Category category = categoryRepository.save(
