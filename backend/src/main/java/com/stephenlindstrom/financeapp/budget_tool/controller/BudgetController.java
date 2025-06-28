@@ -40,7 +40,7 @@ public class BudgetController {
 
   @Operation(
     summary = "Create a new budget",
-    description = "Create a new budget with an amount, a month and year, and associated category"
+    description = "Create a new budget with an amount, a month and year, and associated category."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Budget created successfully"),
@@ -75,7 +75,7 @@ public class BudgetController {
 
   @Operation(
     summary = "Get all budgets",
-    description = "Returns a list of all budgets"
+    description = "Returns a list of all budgets sorted by date."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budgets found and returned"),
@@ -97,7 +97,7 @@ public class BudgetController {
 
   @Operation(
     summary = "Get budget by ID",
-    description = "Returns the budget with the given ID, or a 404 if not found"
+    description = "Returns the budget with the given ID, or a 404 if not found."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budget found and returned"),
@@ -135,7 +135,7 @@ public class BudgetController {
 
   @Operation(
     summary = "Get available months with saved budgets",
-    description = "Returns a list of all year-month combinations that have saved budget records"
+    description = "Returns a list of all year-month combinations that have saved budget records with most recent first."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Months found and returned"),
@@ -157,7 +157,7 @@ public class BudgetController {
   
   @Operation(
     summary = "Update a budget by ID",
-    description = "Updates an existing budget with the specified ID"
+    description = "Updates an existing budget with the specified ID."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budget updated successfully"),
@@ -205,7 +205,7 @@ public class BudgetController {
 
   @Operation(
     summary = "Delete a budget by ID",
-    description = "Deletes a budget with the specified ID"
+    description = "Deletes a budget with the specified ID."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Budget deleted successfully"),

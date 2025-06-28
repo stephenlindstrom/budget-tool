@@ -15,12 +15,12 @@ public class TransactionFilter {
   @Schema(description = "Transaction type", example = "EXPENSE", allowableValues = {"INCOME", "EXPENSE"})
   private TransactionType type;
 
-  @Schema(description = "Category ID that transaction belongs to", example = "4")
+  @Schema(description = "Category ID that transaction belongs to", example = "1")
   private Long categoryId;
 
-  @Schema(description = "Filter transactions starting from this date", example = "2025-03-23")
+  @Schema(description = "Filter transactions starting from this date", example = "2025-06-01")
   private LocalDate startDate;
 
-  @Schema(description = "Filter transactions up until this date inclusive", example = "2025-04-20")
+  @Schema(description = "Filter transactions up until this date inclusive", example = "2025-06-04")
   private LocalDate endDate;
 }

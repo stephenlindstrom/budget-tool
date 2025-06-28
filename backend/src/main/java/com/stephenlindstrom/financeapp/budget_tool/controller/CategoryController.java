@@ -39,7 +39,7 @@ public class CategoryController {
 
   @Operation(
     summary = "Create a category",
-    description = "Creates a category with a given name and transaction type"
+    description = "Creates a category with a given name and transaction type."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Category created successfully"),
@@ -74,7 +74,7 @@ public class CategoryController {
 
   @Operation(
     summary= "Get all categories",
-    description = "Returns a list of all categories"
+    description = "Returns a list of all categories sorted by name."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Categories found and returned"),
@@ -96,7 +96,7 @@ public class CategoryController {
 
   @Operation(
     summary = "Get a category by ID",
-    description = "Returns a category with a certain ID or a not found response"
+    description = "Returns a category with a certain ID or a not found response."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Category found and returned"),
@@ -133,7 +133,7 @@ public class CategoryController {
 
   @Operation(
     summary = "Update a category by ID",
-    description = "Updates an existing category with the specified ID"
+    description = "Updates an existing category with the specified ID."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Category updated successfully"),
@@ -180,7 +180,7 @@ public class CategoryController {
 
   @Operation(
     summary = "Delete a category by ID",
-    description = "Deletes the category with the specified ID"
+    description = "Deletes the category with the specified ID."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Category deleted successfully"),

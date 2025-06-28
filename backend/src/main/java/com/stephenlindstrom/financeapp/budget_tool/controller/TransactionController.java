@@ -41,7 +41,7 @@ public class TransactionController {
 
   @Operation(
     summary = "Create a transaction",
-    description = "Creates a transaction with a given amount, category, transaction type, date, and description"
+    description = "Creates a transaction with a given amount, category, transaction type, date, and description."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Transaction created successfully"),
@@ -74,7 +74,7 @@ public class TransactionController {
 
   @Operation(
     summary = "Get all transactions",
-    description = "Returns a list of all transactions"
+    description = "Returns a list of all transactions sorted by date with most recent transaction first."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Transactions found and returned"),
@@ -96,7 +96,7 @@ public class TransactionController {
 
   @Operation(
     summary = "Get filtered transactions",
-    description = "Returns a list of transactions optionally filtered by transaction type, category, start date, and/or end date"
+    description = "Returns a list of transactions optionally filtered by transaction type, category, start date, and/or end date. Transactions are sorted by date with most recent transaction first."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Transactions found and returned"),
@@ -119,7 +119,7 @@ public class TransactionController {
 
   @Operation(
     summary = "Update a transaction by ID",
-    description = "Updates an existing transaction with the specified ID"
+    description = "Updates an existing transaction with the specified ID."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Transaction updated successfully"),
@@ -166,7 +166,7 @@ public class TransactionController {
 
   @Operation(
     summary = "Delete a transaction by ID",
-    description = "Deletes a transaction with specified ID"
+    description = "Deletes a transaction with specified ID."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Transaction deleted successfully"),
