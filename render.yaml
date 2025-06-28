@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: budget-backend
+    env: java
+    buildCommand: ./mvnw -f backend/pom.xml clean install
+    startCommand: ./mvnw -f backend/pom.xml spring-boot:run
+    rootDir: .
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+
