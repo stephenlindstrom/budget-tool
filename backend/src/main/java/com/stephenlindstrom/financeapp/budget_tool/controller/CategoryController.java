@@ -15,9 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -38,8 +42,26 @@ public class CategoryController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Category created successfully"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "400", description = "Invalid input data", 
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "Validation Error",
+          value = "{\"message\": \"Validation failed for request\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @PostMapping
   public ResponseEntity<CategoryDTO> create(@RequestBody @Valid CategoryCreateDTO dto) {
@@ -55,7 +77,16 @@ public class CategoryController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Categories found and returned"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping
   public ResponseEntity<List<CategoryDTO>> getAll() {
@@ -68,8 +99,26 @@ public class CategoryController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Category found and returned"),
-    @ApiResponse(responseCode = "404", description = "Category not found"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "404", description = "Category not found",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "NotFoundExample",
+          value = "{\"message\": \"Resource not found\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping("/{id}")
   public ResponseEntity<CategoryDTO> getById(@PathVariable Long id) {
@@ -84,9 +133,36 @@ public class CategoryController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Category updated successfully"),
-    @ApiResponse(responseCode = "404", description = "Category not found"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "400", description = "Invalid input data", 
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "Validation Error",
+          value = "{\"message\": \"Validation failed for request\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "404", description = "Category not found", 
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "NotFoundExample",
+          value = "{\"message\": \"Resource not found\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @PutMapping("/{id}")
   public ResponseEntity<CategoryDTO> updateById(@PathVariable Long id, @RequestBody @Valid CategoryCreateDTO dto) {
@@ -100,8 +176,16 @@ public class CategoryController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Category deleted successfully"),
-    @ApiResponse(responseCode = "404", description = "Category not found"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {

@@ -14,12 +14,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.service.TransactionService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -40,8 +44,26 @@ public class TransactionController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Transaction created successfully"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "400", description = "Invalid input data",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "Validation Error",
+          value = "{\"message\": \"Validation failed for request\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @PostMapping
   public ResponseEntity<TransactionDTO> create(@RequestBody @Valid TransactionCreateDTO dto) {
@@ -55,7 +77,16 @@ public class TransactionController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Transactions found and returned"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping
   public ResponseEntity<List<TransactionDTO>> getAll() {
@@ -68,7 +99,16 @@ public class TransactionController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Transactions found and returned"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error", 
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping("/filter")
   public ResponseEntity<List<TransactionDTO>> filter(@ModelAttribute TransactionFilter filter) {
@@ -82,9 +122,36 @@ public class TransactionController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Transaction updated successfully"),
-    @ApiResponse(responseCode = "404", description = "Transaction or category not found"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "400", description = "Invalid input data",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "Validation Error",
+          value = "{\"message\": \"Validation failed for request\"}"
+        )
+      )   
+    ),
+    @ApiResponse(responseCode = "404", description = "Transaction or category not found",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "NotFoundExample",
+          value = "{\"message\": \"Resource not found\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @PutMapping("/{id}")
   public ResponseEntity<TransactionDTO> updateById(@PathVariable Long id, @RequestBody @Valid TransactionCreateDTO dto) {
@@ -98,8 +165,16 @@ public class TransactionController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Transaction deleted successfully"),
-    @ApiResponse(responseCode = "404", description = "Transaction not found"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {

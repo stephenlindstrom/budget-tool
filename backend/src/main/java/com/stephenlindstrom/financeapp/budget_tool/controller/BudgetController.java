@@ -15,10 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -39,8 +43,26 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Budget created successfully"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "400", description = "Invalid input data",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "Validation Error",
+          value = "{\"message\": \"Validation failed for request\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @PostMapping
   public ResponseEntity<BudgetDTO> create(@RequestBody @Valid BudgetCreateDTO dto) {
@@ -56,7 +78,16 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budgets found and returned"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping
   public ResponseEntity<List<BudgetDTO>> getAll() {
@@ -69,8 +100,26 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budget found and returned"),
-    @ApiResponse(responseCode = "404", description = "Budget not found"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "404", description = "Budget not found",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "NotFoundExample",
+          value = "{\"message\": \"Resource not found\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping("/{id}")
   public ResponseEntity<BudgetDTO> getById(@PathVariable Long id) {
@@ -85,7 +134,16 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Months found and returned"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error", 
+    content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @GetMapping("/months")
   public ResponseEntity<List<MonthDTO>> getAvailableMonths() {
@@ -98,9 +156,36 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budget updated successfully"),
-    @ApiResponse(responseCode = "404", description = "Budget or category not found"),
-    @ApiResponse(responseCode = "400", description = "Invalid input data"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "400", description = "Invalid input data",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "Validation Error",
+          value = "{\"message\": \"Validation failed for request\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "404", description = "Budget or category not found",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "NotFoundExample",
+          value = "{\"message\": \"Resource not found\"}"
+        )
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @PutMapping("/{id}")
   public ResponseEntity<BudgetDTO> updateById(@PathVariable Long id, @RequestBody @Valid BudgetCreateDTO dto) {
@@ -115,7 +200,16 @@ public class BudgetController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Budget deleted successfully"),
-    @ApiResponse(responseCode = "500", description = "Server error")
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(
+          name = "ServerErrorExample",
+          value = "{\"message\": \"An unexpected error occurred\"}"
+        )
+      )
+    )
   })
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteById(@PathVariable Long id) {
