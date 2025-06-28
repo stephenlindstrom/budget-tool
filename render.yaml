@@ -1,7 +1,7 @@
 services:
   - type: web
     name: budget-backend
-    env: jar
+    env: java
     buildCommand: ./mvnw -f backend/pom.xml clean install
     startCommand: java -jar backend/target/*.jar
     rootDir: .
