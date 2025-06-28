@@ -1,9 +1,9 @@
 services:
   - type: web
     name: budget-backend
-    env: docker
+    env: static
     buildCommand: ./mvnw -f backend/pom.xml clean install
-    startCommand: ./mvnw -f backend/pom.xml spring-boot:run
+    startCommand: java -jar backend/target/*.jar
     rootDir: .
     envVars:
       - key: SPRING_PROFILES_ACTIVE
