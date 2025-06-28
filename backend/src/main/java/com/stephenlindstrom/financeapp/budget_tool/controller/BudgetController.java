@@ -20,6 +20,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -122,7 +123,11 @@ public class BudgetController {
     )
   })
   @GetMapping("/{id}")
-  public ResponseEntity<BudgetDTO> getById(@PathVariable Long id) {
+  
+  public ResponseEntity<BudgetDTO> getById(
+    @Parameter(description = "ID of the budget to retrieve") 
+    @PathVariable Long id
+  ) {
     return budgetService.getById(id)
           .map(ResponseEntity::ok)
           .orElse(ResponseEntity.notFound().build());
@@ -188,7 +193,11 @@ public class BudgetController {
     )
   })
   @PutMapping("/{id}")
-  public ResponseEntity<BudgetDTO> updateById(@PathVariable Long id, @RequestBody @Valid BudgetCreateDTO dto) {
+  public ResponseEntity<BudgetDTO> updateById(
+    @Parameter(description = "ID of the budget to update")
+    @PathVariable Long id, 
+    @RequestBody @Valid BudgetCreateDTO dto
+  ) {
     BudgetDTO updated = budgetService.updateById(id, dto);
     return ResponseEntity.ok(updated);
 }
@@ -212,7 +221,10 @@ public class BudgetController {
     )
   })
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteById(
+    @Parameter(description = "ID of the budget to delete")
+    @PathVariable Long id
+  ) {
     budgetService.deleteById(id);
     return ResponseEntity.noContent().build();
   }

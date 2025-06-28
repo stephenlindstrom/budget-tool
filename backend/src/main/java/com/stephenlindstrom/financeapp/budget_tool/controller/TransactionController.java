@@ -21,6 +21,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.service.TransactionService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -154,7 +155,11 @@ public class TransactionController {
     )
   })
   @PutMapping("/{id}")
-  public ResponseEntity<TransactionDTO> updateById(@PathVariable Long id, @RequestBody @Valid TransactionCreateDTO dto) {
+  public ResponseEntity<TransactionDTO> updateById(
+    @Parameter(description = "ID of the transaction to update")
+    @PathVariable Long id, 
+    @RequestBody @Valid TransactionCreateDTO dto
+  ) {
     TransactionDTO updated = transactionService.updateById(id, dto);
     return ResponseEntity.ok(updated);
   }
@@ -177,7 +182,10 @@ public class TransactionController {
     )
   })
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
+  public ResponseEntity<Void> delete(
+    @Parameter(description = "ID of the transaction to delete")
+    @PathVariable Long id
+  ) {
     transactionService.deleteById(id);
     return ResponseEntity.noContent().build();
   }

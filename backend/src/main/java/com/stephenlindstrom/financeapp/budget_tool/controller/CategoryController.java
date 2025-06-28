@@ -19,6 +19,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -121,7 +122,10 @@ public class CategoryController {
     )
   })
   @GetMapping("/{id}")
-  public ResponseEntity<CategoryDTO> getById(@PathVariable Long id) {
+  public ResponseEntity<CategoryDTO> getById(
+    @Parameter(description = "ID of the category to retrieve") 
+    @PathVariable Long id
+  ) {
     return categoryService.getById(id)
           .map(ResponseEntity::ok)
           .orElse(ResponseEntity.notFound().build());
@@ -165,7 +169,11 @@ public class CategoryController {
     )
   })
   @PutMapping("/{id}")
-  public ResponseEntity<CategoryDTO> updateById(@PathVariable Long id, @RequestBody @Valid CategoryCreateDTO dto) {
+  public ResponseEntity<CategoryDTO> updateById(
+    @Parameter(description = "ID of the category to update") 
+    @PathVariable Long id, 
+    @RequestBody @Valid CategoryCreateDTO dto
+  ) {
     CategoryDTO updated = categoryService.updateById(id, dto);
     return ResponseEntity.ok(updated);
   }
@@ -188,7 +196,10 @@ public class CategoryController {
     )
   })
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
+  public ResponseEntity<Void> delete(
+    @Parameter(description = "ID of the category to delete")
+    @PathVariable Long id
+  ) {
     categoryService.deleteById(id);
     return ResponseEntity.noContent().build();
   }
