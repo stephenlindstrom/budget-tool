@@ -24,6 +24,11 @@ import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
+/**
+ * Service implementation for managing budget entries.
+ * Handles creation, retrieval, updating, and deletion of budgets.
+ * Also provides functionality for budget summaries and available months.
+ */
 @Service
 public class BudgetServiceImpl implements BudgetService {
 
@@ -37,6 +42,12 @@ public class BudgetServiceImpl implements BudgetService {
     this.transactionService = transactionService;
   }
 
+  /**
+   * Creates a new budget entry.
+   * 
+   * @param dto the budget data to save
+   * @return the saved BudgetDTO
+   */
   @Override
   public BudgetDTO create(BudgetCreateDTO dto) {
     Budget budget = mapToEntity(dto);
@@ -44,6 +55,11 @@ public class BudgetServiceImpl implements BudgetService {
     return mapToDTO(saved);
   }
 
+  /**
+   * Retrieves all budgets, sorted by month in descending order.
+   * 
+   * @return list of all BudgetDTOs
+   */
   @Override
   public List<BudgetDTO> getAll() {
     return budgetRepository.findAll(Sort.by(Sort.Direction.DESC, "month")).stream()
@@ -51,11 +67,25 @@ public class BudgetServiceImpl implements BudgetService {
       .toList();
   }
 
+  /**
+   * Retrieves a budget by its ID.
+   * 
+   * @param id the budget ID
+   * @return Optional containing the BudgetDTO if found
+   */
   @Override
   public Optional<BudgetDTO> getById(Long id) {
     return budgetRepository.findById(id).map(this::mapToDTO);
   }
 
+  /**
+   * Updates an existing budget by ID.
+   * 
+   * @param id the ID of the budget to update
+   * @param dto the new budget data
+   * @return the updated BudgetDTO
+   * @throws ResourceNotFoundException if the budget or category is not found
+   */
   @Override
   public BudgetDTO updateById(Long id, BudgetCreateDTO dto) {
      Budget budget = budgetRepository.findById(id)
@@ -73,21 +103,41 @@ public class BudgetServiceImpl implements BudgetService {
     return mapToDTO(updatedBudget);
   }
 
+  /**
+   * Deletes a budget by its ID.
+   * 
+   * @param id the ID of the budget to delete
+   */
   @Override
   public void deleteById(Long id) {
     budgetRepository.deleteById(id);
   }
 
+  /**
+   * Checks if a budget exists for a specific category and month.
+   * 
+   * @param categoryId the category ID
+   * @param month the year-month combination to check
+   * @return true if a budget exists, false otherwise
+   */
   @Override
   public boolean existsByCategoryIdAndMonth(Long categoryId, YearMonth month) {
     return budgetRepository.existsByCategoryIdAndMonth(categoryId, month);
   }
 
+  /**
+   * Generates a summary of the budget including amount spend and remaining.
+   * 
+   * @param id the budget ID
+   * @return the budget summary
+   * @throws ResourceNotFoundException if the budget is not found
+   */
   @Override
   public BudgetSummaryDTO getBudgetSummary(Long id) {
     Budget budget = budgetRepository.findById(id)
       .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
     
+    // Build a transaction filter to get all expenses for the budget's category and month
     TransactionFilter filter = TransactionFilter.builder()
                               .type(TransactionType.EXPENSE)
                               .categoryId(budget.getCategory().getId())
@@ -113,17 +163,35 @@ public class BudgetServiceImpl implements BudgetService {
     
   }
 
+  /**
+   * Retrieves all budgets for a specific month.
+   * 
+   * @param month the month to filter by
+   * @return list of BudgetDTOs for the given month
+   */
   @Override
   public List<BudgetDTO> getByMonth(YearMonth month) {
     return budgetRepository.findByMonth(month).stream().map(this::mapToDTO).toList();
   }
 
+  /**
+   * Retrieves a list of months for which budgets exist.
+   * Sorted in reverse chronological order.
+   * 
+   * @return list of MonthDTOs
+   */
   @Override
   public List<MonthDTO> getAvailableMonths() {
     return budgetRepository.findDistinctMonths().stream().sorted(Comparator.reverseOrder()).map(this::mapToDTO).toList();
   }
   
-
+  /**
+   * Maps a BudgetCreateDTO to a Budget entity.
+   * 
+   * @param dto the input DTO
+   * @return the Budget entity
+   * @throws ResourceNotFoundException if the category is not found
+   */
   private Budget mapToEntity(BudgetCreateDTO dto) {
     Category category = categoryRepository.findById(dto.getCategoryId())
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -135,6 +203,12 @@ public class BudgetServiceImpl implements BudgetService {
             .build();
   }
 
+  /**
+   * Maps a Budget entity to a BudgetDTO.
+   * 
+   * @param budget the Budget entity
+   * @return the BudgetDTO
+   */
   private BudgetDTO mapToDTO(Budget budget) {
     Category category = budget.getCategory();
 
@@ -152,6 +226,12 @@ public class BudgetServiceImpl implements BudgetService {
             .build();
   }
 
+  /**
+   * Maps a YearMonth to a MonthDTO with formatted value and display strings.
+   * 
+   * @param month the month to format
+   * @return the MonthDTO
+   */
   private MonthDTO mapToDTO(YearMonth month) {
     DateTimeFormatter valueFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
     DateTimeFormatter displayFormatter = DateTimeFormatter.ofPattern("MMMM yyyy");
@@ -160,5 +240,4 @@ public class BudgetServiceImpl implements BudgetService {
             .display(month.format(displayFormatter))
             .build();
   }
-
 }

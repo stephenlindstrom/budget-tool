@@ -17,6 +17,10 @@ import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.TransactionRepository;
 
+/**
+ * Service implementation for managing transactions.
+ * Supports creation, retrieval, filtering, updating, and deletion of transactions.
+ */
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
@@ -28,6 +32,12 @@ public class TransactionServiceImpl implements TransactionService {
     this.categoryRepository = categoryRepository;
   }
 
+  /**
+   * Saves a new transaction.
+   *
+   * @param dto the transaction data to save
+   * @return the saved TransactionDTO
+   */
   @Override
   public TransactionDTO save(TransactionCreateDTO dto) {
     Transaction transaction = mapToEntity(dto);
@@ -35,11 +45,25 @@ public class TransactionServiceImpl implements TransactionService {
     return mapToDTO(saved);
   }
 
+  /**
+   * Retrieves all transactions, sorted in descending order by date.
+   *
+   * @return list of all TransactionDTOs
+   */
   @Override
   public List<TransactionDTO> getAll() {
-    return transactionRepository.findAll(Sort.by(Sort.Direction.DESC, "date")).stream().map(this::mapToDTO).toList();
-  } 
+    return transactionRepository.findAll(Sort.by(Sort.Direction.DESC, "date"))
+            .stream()
+            .map(this::mapToDTO)
+            .toList();
+  }
 
+  /**
+   * Filters transactions based on type, category, and date range.
+   *
+   * @param filter the filter criteria
+   * @return list of TransactionDTOs matching the filter, sorted by date descending
+   */
   @Override
   public List<TransactionDTO> filter(TransactionFilter filter) {
     List<Transaction> result = transactionRepository.findAll();
@@ -68,13 +92,20 @@ public class TransactionServiceImpl implements TransactionService {
               .toList();
     }
 
-    return result
-            .stream()
+    return result.stream()
             .map(this::mapToDTO)
             .sorted(Comparator.comparing(TransactionDTO::getDate).reversed())
             .toList();
   }
 
+  /**
+   * Updates an existing transaction by ID.
+   *
+   * @param id the ID of the transaction to update
+   * @param dto the new transaction data
+   * @return the updated TransactionDTO
+   * @throws ResourceNotFoundException if the transaction or category is not found
+   */
   @Override
   public TransactionDTO updateById(Long id, TransactionCreateDTO dto) {
     Transaction transaction = transactionRepository.findById(id)
@@ -90,15 +121,25 @@ public class TransactionServiceImpl implements TransactionService {
     transaction.setDescription(dto.getDescription());
 
     Transaction updatedTransaction = transactionRepository.save(transaction);
-
     return mapToDTO(updatedTransaction);
   }
 
+  /**
+   * Deletes a transaction by its ID.
+   *
+   * @param id the ID of the transaction to delete
+   */
   @Override
   public void deleteById(Long id) {
     transactionRepository.deleteById(id);
   }
 
+  /**
+   * Converts a Transaction entity to a TransactionDTO.
+   *
+   * @param transaction the Transaction entity
+   * @return the mapped TransactionDTO
+   */
   private TransactionDTO mapToDTO(Transaction transaction) {
     Category category = transaction.getCategory();
 
@@ -117,7 +158,15 @@ public class TransactionServiceImpl implements TransactionService {
             .description(transaction.getDescription())
             .build();
   }
-  
+
+  /**
+   * Converts a TransactionCreateDTO to a Transaction entity.
+   * Defaults to the current date if none is provided.
+   *
+   * @param dto the input data
+   * @return the mapped Transaction entity
+   * @throws ResourceNotFoundException if the category is not found
+   */
   private Transaction mapToEntity(TransactionCreateDTO dto) {
     Category category = categoryRepository.findById(dto.getCategoryId())
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -126,9 +175,8 @@ public class TransactionServiceImpl implements TransactionService {
             .amount(dto.getAmount())
             .category(category)
             .type(dto.getType())
-            .date(dto.getDate() != null  ? dto.getDate() : LocalDate.now())
+            .date(dto.getDate() != null ? dto.getDate() : LocalDate.now()) // fallback to today if null
             .description(dto.getDescription())
             .build();
   }
-
 }
