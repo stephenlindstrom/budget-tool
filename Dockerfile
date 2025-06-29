@@ -1,9 +1,9 @@
 # --------- Build Stage ---------
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY backend backend
 COPY .mvn .mvn
-COPY mvnw pom.xml ./
+COPY mvnw .
+COPY backend ./backend
 RUN ./mvnw -f backend/pom.xml clean package -DskipTests
 
 # --------- Run Stage ---------
