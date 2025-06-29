@@ -27,6 +27,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
+/**
+ * REST controller for managing categories.
+ * Handles requests for creating, retrieving, updating, and deleting categories.
+ *
+ * Base route: /api/categories
+ */
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
@@ -47,29 +53,21 @@ public class CategoryController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "Validation Error",
-          value = "{\"message\": \"Validation failed for request\"}"
-        )
+        examples = @ExampleObject(name = "Validation Error", value = "{\"message\": \"Validation failed for request\"}")
       )
     ),
-    @ApiResponse(responseCode = "500", description = "Server error",
+    @ApiResponse(responseCode = "500", description = "Server error", 
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
   @PostMapping
   public ResponseEntity<CategoryDTO> create(@RequestBody @Valid CategoryCreateDTO dto) {
     CategoryDTO created = categoryService.create(dto);
-    return ResponseEntity
-          .status(HttpStatus.CREATED)
-          .body(created);
+    return ResponseEntity.status(HttpStatus.CREATED).body(created);
   }
 
   @Operation(
@@ -82,10 +80,7 @@ public class CategoryController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -104,20 +99,14 @@ public class CategoryController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "NotFoundExample",
-          value = "{\"message\": \"Resource not found\"}"
-        )
+        examples = @ExampleObject(name = "NotFoundExample", value = "{\"message\": \"Resource not found\"}")
       )
     ),
     @ApiResponse(responseCode = "500", description = "Server error",
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -141,30 +130,21 @@ public class CategoryController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "Validation Error",
-          value = "{\"message\": \"Validation failed for request\"}"
-        )
+        examples = @ExampleObject(name = "Validation Error", value = "{\"message\": \"Validation failed for request\"}")
       )
     ),
     @ApiResponse(responseCode = "404", description = "Category not found", 
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "NotFoundExample",
-          value = "{\"message\": \"Resource not found\"}"
-        )
+        examples = @ExampleObject(name = "NotFoundExample", value = "{\"message\": \"Resource not found\"}")
       )
     ),
-    @ApiResponse(responseCode = "500", description = "Server error",
+    @ApiResponse(responseCode = "500", description = "Server error", 
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -184,14 +164,11 @@ public class CategoryController {
   )
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "Category deleted successfully"),
-    @ApiResponse(responseCode = "500", description = "Server error",
+    @ApiResponse(responseCode = "500", description = "Server error", 
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })

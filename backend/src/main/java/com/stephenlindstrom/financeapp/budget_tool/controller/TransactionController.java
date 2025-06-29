@@ -29,6 +29,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
+/**
+ * REST controller for managing transactions.
+ * Provides endpoints to create, retrieve, filter, update, and delete transactions.
+ *
+ * Base route: /api/transactions
+ */
 @RestController
 @RequestMapping("/api/transactions")
 public class TransactionController {
@@ -49,20 +55,14 @@ public class TransactionController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "Validation Error",
-          value = "{\"message\": \"Validation failed for request\"}"
-        )
+        examples = @ExampleObject(name = "Validation Error", value = "{\"message\": \"Validation failed for request\"}")
       )
     ),
     @ApiResponse(responseCode = "500", description = "Server error",
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -82,10 +82,7 @@ public class TransactionController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -104,10 +101,7 @@ public class TransactionController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -127,30 +121,21 @@ public class TransactionController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "Validation Error",
-          value = "{\"message\": \"Validation failed for request\"}"
-        )
+        examples = @ExampleObject(name = "Validation Error", value = "{\"message\": \"Validation failed for request\"}")
       )   
     ),
     @ApiResponse(responseCode = "404", description = "Transaction or category not found",
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "NotFoundExample",
-          value = "{\"message\": \"Resource not found\"}"
-        )
+        examples = @ExampleObject(name = "NotFoundExample", value = "{\"message\": \"Resource not found\"}")
       )
     ),
     @ApiResponse(responseCode = "500", description = "Server error",
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
@@ -174,10 +159,7 @@ public class TransactionController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(implementation = ErrorResponse.class),
-        examples = @ExampleObject(
-          name = "ServerErrorExample",
-          value = "{\"message\": \"An unexpected error occurred\"}"
-        )
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
       )
     )
   })
