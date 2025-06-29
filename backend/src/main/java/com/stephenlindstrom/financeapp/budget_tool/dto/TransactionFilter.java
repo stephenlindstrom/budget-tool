@@ -7,6 +7,10 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+/**
+ * Represents optional filter criteria for retrieving transactions.
+ * Used in /filter endpoint to match by type, category, and/or date range.
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -13,7 +13,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
     description = "A personal budgeting API for managing transactions and budgets in various categories"
   )
 )
-
+/**
+ * Main entry point for the Budget Tool Spring Boot application
+ */
 @SpringBootApplication
 public class BudgetToolApplication {
 
