@@ -33,13 +33,13 @@ public class TransactionServiceImpl implements TransactionService {
   }
 
   /**
-   * Saves a new transaction.
+   * Creates a new transaction.
    *
-   * @param dto the transaction data to save
-   * @return the saved TransactionDTO
+   * @param dto the data for the new transaction
+   * @return the created TransactionDTO
    */
   @Override
-  public TransactionDTO save(TransactionCreateDTO dto) {
+  public TransactionDTO create(TransactionCreateDTO dto) {
     Transaction transaction = mapToEntity(dto);
     Transaction saved = transactionRepository.save(transaction);
     return mapToDTO(saved);

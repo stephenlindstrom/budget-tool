@@ -111,7 +111,7 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  void testSave_WithValidInput_ReturnsTransactionDTO() {
+  void testCreate_WithValidInput_ReturnsTransactionDTO() {
     // Arrange
     BigDecimal amount = BigDecimal.valueOf(100.00);
     Long categoryId = 1L;
@@ -146,7 +146,7 @@ public class TransactionServiceImplTest {
     when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));
 
     // Act
-    TransactionDTO result = transactionService.save(dto);
+    TransactionDTO result = transactionService.create(dto);
 
     // Assert
     verify(transactionRepository).save(any(Transaction.class));
@@ -164,7 +164,7 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  void testSave_WithInvalidCategoryId_ThrowsResourceNotFoundException() {
+  void testCreate_WithInvalidCategoryId_ThrowsResourceNotFoundException() {
     // Arrange
     TransactionCreateDTO dto = TransactionCreateDTO.builder()
         .amount(BigDecimal.valueOf(100.00))
@@ -178,7 +178,7 @@ public class TransactionServiceImplTest {
 
     // Act
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
-      transactionService.save(dto);
+      transactionService.create(dto);
     });
 
     assertEquals("Category not found", exception.getMessage());
@@ -186,7 +186,7 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  void testSave_WithNullDateAndNullDescription_ReturnsTransactionDTOWithCurrentDateAndEmptyDescription() {
+  void testCreate_WithNullDateAndNullDescription_ReturnsTransactionDTOWithCurrentDateAndEmptyDescription() {
       // Arrange
     BigDecimal amount = BigDecimal.valueOf(100.00);
     Long categoryId = 1L;
@@ -212,7 +212,7 @@ public class TransactionServiceImplTest {
     ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
 
     // Act
-    TransactionDTO result = transactionService.save(dto);
+    TransactionDTO result = transactionService.create(dto);
 
     // Assert
     verify(transactionRepository).save(captor.capture());

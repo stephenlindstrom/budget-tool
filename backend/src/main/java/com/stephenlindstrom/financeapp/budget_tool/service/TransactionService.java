@@ -13,12 +13,12 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 public interface TransactionService {
 
     /**
-     * Creates and saves a new transaction.
+     * Creates a new transaction.
      *
-     * @param dto the transaction data to save
-     * @return the saved TransactionDTO
+     * @param dto the data for the new transaction
+     * @return the created TransactionDTO
      */
-    TransactionDTO save(TransactionCreateDTO dto);
+    TransactionDTO create(TransactionCreateDTO dto);
 
     /**
      * Retrieves all transactions, sorted in descending order by date.
