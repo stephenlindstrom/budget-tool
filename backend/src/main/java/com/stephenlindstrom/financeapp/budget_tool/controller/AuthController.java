@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.LoginRequest;
-import com.stephenlindstrom.financeapp.budget_tool.model.User;
+import com.stephenlindstrom.financeapp.budget_tool.dto.UserRegistrationDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.UserService;
 
 import jakarta.validation.Valid;
@@ -23,9 +23,9 @@ public class AuthController {
   }
 
   @PostMapping("/register")
-  public ResponseEntity<String> register(@RequestBody User user) {
+  public ResponseEntity<String> register(@RequestBody @Valid UserRegistrationDTO dto) {
     try {
-      userService.registerUser(user);
+      userService.registerUser(dto);
       return ResponseEntity.ok("User registered successfully");
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(e.getMessage());
