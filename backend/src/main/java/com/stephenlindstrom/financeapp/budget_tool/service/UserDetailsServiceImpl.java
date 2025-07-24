@@ -1,7 +1,9 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.util.Collections;
+import java.util.List;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     return new org.springframework.security.core.userdetails.User(
       user.getUsername(),
       user.getPassword(),
-      Collections.emptyList()
+      List.of(new SimpleGrantedAuthority("ROLE_USER"))
     );
   }
 }
