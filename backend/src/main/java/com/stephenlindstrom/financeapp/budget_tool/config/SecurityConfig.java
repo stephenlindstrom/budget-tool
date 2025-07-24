@@ -10,21 +10,26 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.stephenlindstrom.financeapp.budget_tool.security.JwtAuthFilter;
+import com.stephenlindstrom.financeapp.budget_tool.security.JwtAuthenticationEntryPoint;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
   private final JwtAuthFilter jwtAuthFilter;
+  private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-  public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+  public SecurityConfig(JwtAuthFilter jwtAuthFilter, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
     this.jwtAuthFilter = jwtAuthFilter;
+    this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
   }
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
       .csrf(csrf -> csrf.disable())
+      .exceptionHandling(ex -> ex
+        .authenticationEntryPoint(jwtAuthenticationEntryPoint))
       .authorizeHttpRequests(auth -> auth
         .requestMatchers(
           "/api/auth/**",

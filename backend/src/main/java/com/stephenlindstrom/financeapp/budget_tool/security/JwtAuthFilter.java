@@ -2,6 +2,7 @@ package com.stephenlindstrom.financeapp.budget_tool.security;
 
 import java.io.IOException;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,13 +39,26 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       final String jwt;
       final String username;
 
-      if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      if (authHeader == null ) {
         filterChain.doFilter(request, response);
         return;
       }
 
-      jwt = authHeader.substring(7);
-      username = jwtService.extractUsername(jwt);
+      String trimmedHeader = authHeader.trim();
+
+      if (!trimmedHeader.startsWith("Bearer ")) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
+      jwt = trimmedHeader.substring(7);
+      
+      try {
+        username = jwtService.extractUsername(jwt);
+      } catch (JwtException | IllegalArgumentException e) {
+        throw new BadCredentialsException("Invalid or expired JWT token", e);
+      }
+      
 
       if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
