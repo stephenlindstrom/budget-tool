@@ -1,6 +1,5 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
