@@ -22,13 +22,13 @@ public class JwtServiceTest {
   private final String secret = Base64.getEncoder().encodeToString("my-test-secret-key-12345678901234567890".getBytes());
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     jwtService = new JwtService();
     ReflectionTestUtils.setField(jwtService, "secretKey", secret);
   }
 
   @Test
-  public void testGenerateTokenAndExtractUsername() {
+  void testGenerateTokenAndExtractUsername() {
     String username = "testuser";
     String token = jwtService.generateToken(username);
 
@@ -38,7 +38,7 @@ public class JwtServiceTest {
   }
 
   @Test
-  public void testIsTokenValid() {
+  void testIsTokenValid() {
     String username = "testuser";
     String token = jwtService.generateToken(username);
 
@@ -47,7 +47,7 @@ public class JwtServiceTest {
   }
 
   @Test
-  public void testExpiredTokenIsInvalid() {
+  void testExpiredTokenIsInvalid() {
     String username = "expiredUser";
     Key key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
 
@@ -64,7 +64,7 @@ public class JwtServiceTest {
   }
 
   @Test
-  public void testMalformedTokenIsInvalid() {
+  void testMalformedTokenIsInvalid() {
     String malformedToken = "this.is.not.a.valid.token";
     String username = "testuser";
 
@@ -74,7 +74,7 @@ public class JwtServiceTest {
   }
 
   @Test
-  public void testNullTokenIsInvalid() {
+  void testNullTokenIsInvalid() {
     String username = "testuser";
 
     assertThrows(IllegalArgumentException.class, () -> {
@@ -83,7 +83,7 @@ public class JwtServiceTest {
   }
 
   @Test
-  public void testEmptyTokenIsInvalid() {
+  void testEmptyTokenIsInvalid() {
     String username = "testuser";
 
     assertThrows(IllegalArgumentException.class, () -> {
