@@ -1,5 +1,6 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,10 +34,10 @@ public class UserService {
 
   public User authenticateUser(String username, String rawPassword) {
     User user = userRepository.findByUsername(username)
-      .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+      .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
     if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
-      throw new IllegalArgumentException("Invalid username or password");
+      throw new BadCredentialsException("Invalid username or password");
     }
 
     return user;

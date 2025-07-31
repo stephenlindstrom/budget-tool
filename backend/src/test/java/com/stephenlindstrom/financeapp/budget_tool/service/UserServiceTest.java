@@ -16,6 +16,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.UserRegistrationDTO;
@@ -91,16 +92,16 @@ public class UserServiceTest {
   }
 
   @Test
-  void testAuthenticateUser_whenUsernameInvalid_throwsIllegalArgumentException() {
+  void testAuthenticateUser_whenUsernameInvalid_throwsBadCredentialsException() {
     when(userRepository.findByUsername("invalidUsername")).thenReturn(Optional.empty());
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(BadCredentialsException.class, () -> {
       userService.authenticateUser("invalidUsername", "rawPassword");
     });
   }
 
   @Test
-  void testAuthenticateUser_whenPasswordInvalid_throwsIllegalArgumentException() {
+  void testAuthenticateUser_whenPasswordInvalid_throwsBadCredentialsException() {
     User user = User.builder()
                 .username("testuser")
                 .password("hashedPassword")
@@ -109,7 +110,7 @@ public class UserServiceTest {
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
     when(passwordEncoder.matches("rawPassword", user.getPassword())).thenReturn(false);
 
-    assertThrows(IllegalArgumentException.class, () -> {
+    assertThrows(BadCredentialsException.class, () -> {
       userService.authenticateUser("testuser", "rawPassword");
     });
     verify(passwordEncoder).matches("rawPassword", user.getPassword());
