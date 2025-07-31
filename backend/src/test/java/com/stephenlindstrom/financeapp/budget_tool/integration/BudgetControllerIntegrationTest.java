@@ -15,13 +15,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
@@ -29,15 +24,7 @@ import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
-@ActiveProfiles("test")
-@SpringBootTest
-@AutoConfigureMockMvc
-public class BudgetControllerIntegrationTest {
-  @Autowired
-  private MockMvc mockMvc;
-
-  @Autowired
-  private ObjectMapper objectMapper;
+public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
   private BudgetRepository budgetRepository;
@@ -66,6 +53,7 @@ public class BudgetControllerIntegrationTest {
                             .build();
 
     mockMvc.perform(post("/api/budgets")
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isCreated())
@@ -84,6 +72,7 @@ public class BudgetControllerIntegrationTest {
                             .build();
 
     mockMvc.perform(post("/api/budgets")
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isBadRequest());
@@ -111,7 +100,8 @@ public class BudgetControllerIntegrationTest {
 
     budgetRepository.saveAll(List.of(budget1, budget2));
     
-    mockMvc.perform(get("/api/budgets"))
+    mockMvc.perform(get("/api/budgets")
+            .with(bearerToken()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$[0].value").value(500.00))
@@ -139,7 +129,8 @@ public class BudgetControllerIntegrationTest {
                       .build()
     );
 
-    mockMvc.perform(get("/api/budgets/{id}", budget.getId()))
+    mockMvc.perform(get("/api/budgets/{id}", budget.getId())
+            .with(bearerToken()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.value").value(500.00))
             .andExpect(jsonPath("$.month").value("2025-06"))
@@ -149,7 +140,8 @@ public class BudgetControllerIntegrationTest {
 
   @Test
   void shouldReturn404WhenGettingNonExistentBudget() throws Exception {
-    mockMvc.perform(get("/api/budgets/{id}", 999L))
+    mockMvc.perform(get("/api/budgets/{id}", 999L)
+            .with(bearerToken()))
             .andExpect(status().isNotFound());
   }
 
@@ -175,7 +167,8 @@ public class BudgetControllerIntegrationTest {
 
     budgetRepository.saveAll(List.of(budget1, budget2));
 
-    mockMvc.perform(get("/api/budgets/months"))
+    mockMvc.perform(get("/api/budgets/months")
+            .with(bearerToken()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$[0].value").value("2025-06"))
@@ -206,6 +199,7 @@ public class BudgetControllerIntegrationTest {
                             .build();
     
     mockMvc.perform(put("/api/budgets/{id}", budget.getId())
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isOk())
@@ -231,6 +225,7 @@ public class BudgetControllerIntegrationTest {
                             .build();
 
     mockMvc.perform(put("/api/budgets/{id}", 999L)
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isNotFound());
@@ -258,6 +253,7 @@ public class BudgetControllerIntegrationTest {
                             .build();
 
     mockMvc.perform(put("/api/budgets/{id}", budget.getId())
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isNotFound());
@@ -278,7 +274,8 @@ public class BudgetControllerIntegrationTest {
                       .build()
     );
 
-    mockMvc.perform(delete("/api/budgets/{id}", budget.getId()))
+    mockMvc.perform(delete("/api/budgets/{id}", budget.getId())
+            .with(bearerToken()))
             .andExpect(status().isNoContent());
 
     assertFalse(budgetRepository.findById(budget.getId()).isPresent());
@@ -286,7 +283,8 @@ public class BudgetControllerIntegrationTest {
 
   @Test
   void shouldReturnNoContentWhenDeletingNonExistentBudget() throws Exception {
-    mockMvc.perform(delete("/api/budgets/{id}", 999L))
+    mockMvc.perform(delete("/api/budgets/{id}", 999L)
+            .with(bearerToken()))
             .andExpect(status().isNoContent());
   }
 }

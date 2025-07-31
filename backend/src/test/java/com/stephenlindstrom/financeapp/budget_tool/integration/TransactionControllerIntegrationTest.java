@@ -7,11 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -21,7 +17,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
@@ -29,15 +24,7 @@ import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.TransactionRepository;
 
-@ActiveProfiles("test")
-@SpringBootTest
-@AutoConfigureMockMvc
-public class TransactionControllerIntegrationTest {
-  @Autowired
-  private MockMvc mockMvc;
-
-  @Autowired
-  private ObjectMapper objectMapper;
+public class TransactionControllerIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired
   private TransactionRepository transactionRepository;
@@ -69,6 +56,7 @@ public class TransactionControllerIntegrationTest {
                                 .build();
     
     mockMvc.perform(post("/api/transactions")
+            .with(bearerToken())
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(dto)))
           .andExpect(status().isCreated())
@@ -88,6 +76,7 @@ public class TransactionControllerIntegrationTest {
                                 .build();
 
     mockMvc.perform(post("/api/transactions")
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isBadRequest());
@@ -120,7 +109,8 @@ public class TransactionControllerIntegrationTest {
 
     transactionRepository.saveAll(List.of(transaction1, transaction2));
 
-    mockMvc.perform(get("/api/transactions"))
+    mockMvc.perform(get("/api/transactions")
+          .with(bearerToken()))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(2))
           .andExpect(jsonPath("$[0].amount").value(100.00))
@@ -167,7 +157,8 @@ public class TransactionControllerIntegrationTest {
     transactionRepository.saveAll(List.of(transaction1, transaction2, transaction3));
 
     mockMvc.perform(get("/api/transactions/filter")
-            .param("startDate", "2025-06-01"))
+            .param("startDate", "2025-06-01")
+            .with(bearerToken()))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(2))
           .andExpect(jsonPath("$[0].date").value("2025-06-12"))
@@ -211,6 +202,7 @@ public class TransactionControllerIntegrationTest {
                                 .build();
     
     mockMvc.perform(put("/api/transactions/{id}", transaction.getId())
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isOk())
@@ -241,6 +233,7 @@ public class TransactionControllerIntegrationTest {
                                 .build();
 
     mockMvc.perform(put("/api/transactions/{id}", 999L)
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isNotFound());
@@ -274,6 +267,7 @@ public class TransactionControllerIntegrationTest {
                                 .build();
     
     mockMvc.perform(put("/api/transactions/{id}", transaction.getId())
+              .with(bearerToken())
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(dto)))
             .andExpect(status().isNotFound());
@@ -299,7 +293,8 @@ public class TransactionControllerIntegrationTest {
           .build()
     );
 
-    mockMvc.perform(delete("/api/transactions/{id}", transaction1.getId()))
+    mockMvc.perform(delete("/api/transactions/{id}", transaction1.getId())
+          .with(bearerToken()))
           .andExpect(status().isNoContent());
 
     assertFalse(transactionRepository.findById(transaction1.getId()).isPresent());
@@ -307,7 +302,8 @@ public class TransactionControllerIntegrationTest {
 
   @Test
   void shouldReturnNoContentWhenDeletingNonExistentTransaction() throws Exception {
-    mockMvc.perform(delete("/api/transactions/{id}", 999L))
+    mockMvc.perform(delete("/api/transactions/{id}", 999L)
+            .with(bearerToken()))
             .andExpect(status().isNoContent());
   }
 }
