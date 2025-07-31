@@ -24,10 +24,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final UserDetailsService userDetailsService;
+  private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-  public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+  public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
     this.jwtService = jwtService;
     this.userDetailsService = userDetailsService;
+    this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
   }
 
   @Override
@@ -56,7 +58,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       try {
         username = jwtService.extractUsername(jwt);
       } catch (JwtException | IllegalArgumentException e) {
-        throw new BadCredentialsException("Invalid or expired JWT token", e);
+          jwtAuthenticationEntryPoint.commence(request, response, 
+            new BadCredentialsException("Invalid or expired JWT token", e));
+          return;
       }
       
 
