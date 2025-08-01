@@ -10,6 +10,9 @@ import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+/**
+ * REST controller for providing demo JWT token
+ */
 @RestController
 @RequestMapping("/api/auth")
 @Profile("demo")
