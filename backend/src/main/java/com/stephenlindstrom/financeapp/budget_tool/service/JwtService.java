@@ -13,16 +13,24 @@ import java.util.Date;
 @Service
 public class JwtService {
 
+    // Injects the secret key from application properties
     @Value("${jwt.secret}")
     private String secretKey;
 
-    private static final long EXPIRATION_TIME = 86400000; // 1 day in ms
+    // 1 day in milliseconds
+    private static final long EXPIRATION_TIME = 86400000;
 
+    /**
+     * Generates the cryptographic key used to sign and validate JWT tokens.
+     */
     private Key getSigningKey() {
       byte[] keyBytes = Base64.getDecoder().decode(secretKey);
       return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Generates a JWT token for a given username.
+     */
     public String generateToken(String username) {
       return Jwts.builder()
             .setSubject(username)
@@ -32,6 +40,9 @@ public class JwtService {
             .compact();
     }
 
+    /**
+     * Extracts the username from a given JWT token.
+     */
     public String extractUsername(String token) {
       return Jwts.parserBuilder()
             .setSigningKey(getSigningKey())
@@ -41,10 +52,16 @@ public class JwtService {
             .getSubject();
     }
 
+    /**
+     * Validates the token against the provided username and checks that it hasn't expired.
+     */
     public boolean isTokenValid(String token, String username) {
       return username.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
+    /**
+     * Checks whether the token has expired.
+     */
     private boolean isTokenExpired(String token) {
       return Jwts.parserBuilder()
             .setSigningKey(getSigningKey())

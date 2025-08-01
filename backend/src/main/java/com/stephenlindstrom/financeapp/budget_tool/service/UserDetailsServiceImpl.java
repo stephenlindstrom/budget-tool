@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.UserRepository;
-
+/**
+ * Custom implementation of Spring Security's UserDetailsService interface.
+ * Used by Spring Security to retrieve user details during authentication.
+ */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -25,6 +28,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     User user = userRepository.findByUsername(username)
         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+    // Return a Spring Security-compatible User object
     return new org.springframework.security.core.userdetails.User(
       user.getUsername(),
       user.getPassword(),

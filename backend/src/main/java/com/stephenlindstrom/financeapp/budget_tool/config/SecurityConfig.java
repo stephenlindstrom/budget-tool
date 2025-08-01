@@ -16,7 +16,10 @@ import com.stephenlindstrom.financeapp.budget_tool.security.JwtAuthenticationEnt
 @EnableWebSecurity
 public class SecurityConfig {
 
+  // Custom filter that intercepts requests to validate JWTs
   private final JwtAuthFilter jwtAuthFilter;
+
+  // Custom entry point that handles unauthorized access (returns 401)
   private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
   public SecurityConfig(JwtAuthFilter jwtAuthFilter, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
@@ -24,6 +27,10 @@ public class SecurityConfig {
     this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
   }
 
+  /**
+   * Configures which endpoints are public, how exceptions are handled, 
+   * and where to place the JWT filter.
+   */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
