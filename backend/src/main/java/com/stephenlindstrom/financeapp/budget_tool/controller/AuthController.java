@@ -11,8 +11,14 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.UserRegistrationDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 import com.stephenlindstrom.financeapp.budget_tool.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-
+/**
+ * REST controller for authentication-related endpoints.
+ * Handles requests for registering new users and logging in users.
+ * 
+ * Base route: /api/auth
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -25,6 +31,10 @@ public class AuthController {
     this.jwtService = jwtService;
   }
 
+  @Operation(
+    summary = "Register a new user",
+    description = "Register a new user with a username and password."
+  )
   @PostMapping("/register")
   public ResponseEntity<String> register(@RequestBody @Valid UserRegistrationDTO dto) {
     try {
@@ -35,6 +45,10 @@ public class AuthController {
     }
   }
 
+  @Operation(
+    summary = "Login registered user",
+    description = "Login registered user by providing valid username and password."
+  )
   @PostMapping("/login")
   public ResponseEntity<String> login(@RequestBody @Valid LoginRequest loginRequest) {
     try {
