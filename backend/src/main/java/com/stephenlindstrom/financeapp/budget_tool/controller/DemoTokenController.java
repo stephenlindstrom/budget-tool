@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 /**
  * REST controller for providing demo JWT token
@@ -26,6 +30,12 @@ public class DemoTokenController {
 
   @Operation(summary = "Get JWT token for demo user", 
             description = "Returns a JWT token for 'demoUser'. Only available in 'demo' profile.")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Demo JWT token generated",
+      content = @Content(
+        schema = @Schema(example = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO...")
+      ))
+  })
   @GetMapping("/demo-token")
   public ResponseEntity<String> getDemoToken() {
     String token = jwtService.generateToken("demoUser");
