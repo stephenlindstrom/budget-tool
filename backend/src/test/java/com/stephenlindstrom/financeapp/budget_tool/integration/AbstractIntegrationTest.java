@@ -55,7 +55,7 @@ public abstract class AbstractIntegrationTest {
     mockMvc.perform(post("/api/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
             .content(registerPayload))
-            .andExpect(status().isOk());
+            .andExpect(status().isCreated());
   }
 
   private String loginAndGetToken(String username, String password) throws Exception {
@@ -71,8 +71,15 @@ public abstract class AbstractIntegrationTest {
             .content(loginPayload))
             .andExpect(status().isOk())
             .andReturn();
+
+    String jsonResponse = result.getResponse().getContentAsString();
+
+    String token = new ObjectMapper()
+        .readTree(jsonResponse)
+        .get("token")
+        .asText();
     
-    return result.getResponse().getContentAsString();
+    return token;
   }
 
   protected RequestPostProcessor bearerToken() {

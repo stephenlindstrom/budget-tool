@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.charset.StandardCharsets;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 
 import io.jsonwebtoken.Jwts;
@@ -42,8 +43,8 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
     mockMvc.perform(post("/api/auth/register")
               .contentType(MediaType.APPLICATION_JSON)
               .content(payload))
-              .andExpect(status().isOk())
-              .andExpect(content().string("User registered successfully")); 
+              .andExpect(status().isCreated())
+              .andExpect(jsonPath("$.message").value("User registered successfully")); 
   }
 
   @Test
@@ -99,7 +100,13 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
               .andExpect(status().isOk())
               .andReturn();
     
-    String token = result.getResponse().getContentAsString();
+    String jsonResponse = result.getResponse().getContentAsString();
+
+    String token = new ObjectMapper()
+        .readTree(jsonResponse)
+        .get("token")
+        .asText();
+
     assertNotNull(token);
     assertFalse(token.isBlank());
 
@@ -137,7 +144,12 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
               .andExpect(status().isOk())
               .andReturn();
     
-    String token = result.getResponse().getContentAsString();
+    String jsonResponse = result.getResponse().getContentAsString();
+
+    String token = new ObjectMapper()
+        .readTree(jsonResponse)
+        .get("token")
+        .asText();
 
     mockMvc.perform(get("/api/transactions")
             .header("Authorization", "Bearer " + token))
