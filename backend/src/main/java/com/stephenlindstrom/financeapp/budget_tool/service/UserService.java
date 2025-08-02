@@ -1,6 +1,8 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +57,18 @@ public class UserService {
     }
 
     return user;
+  }
+
+  /**
+   * Retrieves authenticated user or else throws UsernameNotFoundException.
+   * 
+   * @return authenticated User entity
+   * @throws UsernameNotFoundException if the authenticated user is not found
+   */
+  public User getAuthenticatedUser() {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    return userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
   }
 
   /**
