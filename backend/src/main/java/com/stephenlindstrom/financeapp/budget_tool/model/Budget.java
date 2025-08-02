@@ -33,4 +33,10 @@ public class Budget {
   @JoinColumn(name = "category_id")
   private Category category;
 
+  @JsonIgnore
+  @ToString.Exclude
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User user;
+
 }

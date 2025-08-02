@@ -2,6 +2,7 @@ package com.stephenlindstrom.financeapp.budget_tool.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 
 import jakarta.persistence.*;
@@ -28,5 +29,11 @@ public class Category {
 
   @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
   private List<Budget> budgets;
+
+  @JsonIgnore
+  @ToString.Exclude
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User user;
 
 }

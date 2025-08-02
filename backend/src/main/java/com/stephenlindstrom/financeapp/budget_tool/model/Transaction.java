@@ -38,4 +38,10 @@ public class Transaction {
   private LocalDate date;
 
   private String description;
+
+  @JsonIgnore
+  @ToString.Exclude
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User user;
 }
