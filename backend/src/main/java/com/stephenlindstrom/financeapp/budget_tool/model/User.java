@@ -1,5 +1,7 @@
 package com.stephenlindstrom.financeapp.budget_tool.model;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,4 +25,13 @@ public class User {
 
   @Column(nullable = false)
   private String password;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private List<Budget> budgets;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private List<Transaction> transactions;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private List<Category> categories;
 }
