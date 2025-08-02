@@ -37,6 +37,14 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/budgets")
+@ApiResponses(value = {
+  @ApiResponse(responseCode = "401", description = "Unauthorized - Valid JWT token required",
+    content = @Content(
+      mediaType = "text/plain",
+      examples = @ExampleObject(name = "UnauthorizedError", value = "Unauthorized")
+    )
+  )
+})
 public class BudgetController {
 
   private final BudgetService budgetService;

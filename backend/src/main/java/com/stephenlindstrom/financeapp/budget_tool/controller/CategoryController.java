@@ -35,6 +35,14 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/categories")
+@ApiResponses(value = {
+  @ApiResponse(responseCode = "401", description = "Unauthorized - Valid JWT token required",
+    content = @Content(
+      mediaType = "text/plain",
+      examples = @ExampleObject(name = "UnauthorizedError", value = "Unauthorized")
+    )
+  )
+})
 public class CategoryController {
 
   private final CategoryService categoryService;

@@ -37,6 +37,14 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/transactions")
+@ApiResponses(value = {
+  @ApiResponse(responseCode = "401", description = "Unauthorized - Valid JWT token required",
+    content = @Content(
+      mediaType = "text/plain",
+      examples = @ExampleObject(name = "UnauthorizedError", value = "Unauthorized")
+    )
+  )
+})
 public class TransactionController {
 
   private final TransactionService transactionService;
