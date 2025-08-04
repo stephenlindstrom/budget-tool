@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
@@ -21,6 +20,7 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -35,11 +35,13 @@ public class BudgetServiceImpl implements BudgetService {
   private final BudgetRepository budgetRepository;
   private final CategoryRepository categoryRepository;
   private final TransactionService transactionService;
+  private final UserService userService;
 
-  public BudgetServiceImpl(BudgetRepository budgetRepository, CategoryRepository categoryRepository, TransactionService transactionService) {
+  public BudgetServiceImpl(BudgetRepository budgetRepository, CategoryRepository categoryRepository, TransactionService transactionService, UserService userService) {
     this.budgetRepository = budgetRepository;
     this.categoryRepository = categoryRepository;
     this.transactionService = transactionService;
+    this.userService = userService;
   }
 
   /**
@@ -50,7 +52,9 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public BudgetDTO create(BudgetCreateDTO dto) {
-    Budget budget = mapToEntity(dto);
+    User user = userService.getAuthenticatedUser();
+    
+    Budget budget = mapToEntity(dto, user);
     Budget saved = budgetRepository.save(budget);
     return mapToDTO(saved);
   }
@@ -62,7 +66,9 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public List<BudgetDTO> getAll() {
-    return budgetRepository.findAll(Sort.by(Sort.Direction.DESC, "month")).stream()
+    User user = userService.getAuthenticatedUser();
+      
+    return budgetRepository.findByUserOrderByMonthDesc(user).stream()
       .map(this::mapToDTO)
       .toList();
   }
@@ -75,7 +81,8 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public Optional<BudgetDTO> getById(Long id) {
-    return budgetRepository.findById(id).map(this::mapToDTO);
+    User user = userService.getAuthenticatedUser();
+    return budgetRepository.findByIdAndUser(id, user).map(this::mapToDTO);
   }
 
   /**
@@ -88,10 +95,12 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public BudgetDTO updateById(Long id, BudgetCreateDTO dto) {
-     Budget budget = budgetRepository.findById(id)
+    User user = userService.getAuthenticatedUser();
+
+    Budget budget = budgetRepository.findByIdAndUser(id, user)
         .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
       
-    Category category = categoryRepository.findById(dto.getCategoryId())
+    Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
         .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
       
     budget.setValue(dto.getValue());
@@ -110,7 +119,8 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public void deleteById(Long id) {
-    budgetRepository.deleteById(id);
+    User user = userService.getAuthenticatedUser();
+    budgetRepository.deleteByIdAndUser(id, user);
   }
 
   /**
@@ -122,7 +132,8 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public boolean existsByCategoryIdAndMonth(Long categoryId, YearMonth month) {
-    return budgetRepository.existsByCategoryIdAndMonth(categoryId, month);
+    User user = userService.getAuthenticatedUser();
+    return budgetRepository.existsByCategoryIdAndMonthAndUser(categoryId, month, user);
   }
 
   /**
@@ -134,7 +145,9 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public BudgetSummaryDTO getBudgetSummary(Long id) {
-    Budget budget = budgetRepository.findById(id)
+    User user = userService.getAuthenticatedUser();
+
+    Budget budget = budgetRepository.findByIdAndUser(id, user)
       .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
     
     // Build a transaction filter to get all expenses for the budget's category and month
@@ -171,7 +184,8 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public List<BudgetDTO> getByMonth(YearMonth month) {
-    return budgetRepository.findByMonth(month).stream().map(this::mapToDTO).toList();
+    User user = userService.getAuthenticatedUser();
+    return budgetRepository.findByMonthAndUser(month, user).stream().map(this::mapToDTO).toList();
   }
 
   /**
@@ -182,7 +196,8 @@ public class BudgetServiceImpl implements BudgetService {
    */
   @Override
   public List<MonthDTO> getAvailableMonths() {
-    return budgetRepository.findDistinctMonths().stream().sorted(Comparator.reverseOrder()).map(this::mapToDTO).toList();
+    User user = userService.getAuthenticatedUser();
+    return budgetRepository.findDistinctMonthsByUser(user).stream().sorted(Comparator.reverseOrder()).map(this::mapToDTO).toList();
   }
   
   /**
@@ -192,14 +207,15 @@ public class BudgetServiceImpl implements BudgetService {
    * @return the Budget entity
    * @throws ResourceNotFoundException if the category is not found
    */
-  private Budget mapToEntity(BudgetCreateDTO dto) {
-    Category category = categoryRepository.findById(dto.getCategoryId())
+  private Budget mapToEntity(BudgetCreateDTO dto, User user) {
+    Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
     return Budget.builder()
             .value(dto.getValue())
             .month(dto.getMonth())
             .category(category)
+            .user(user)
             .build();
   }
 

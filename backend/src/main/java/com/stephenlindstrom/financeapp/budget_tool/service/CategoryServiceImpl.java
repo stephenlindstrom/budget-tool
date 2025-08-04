@@ -3,7 +3,6 @@ package com.stephenlindstrom.financeapp.budget_tool.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
@@ -11,6 +10,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
 /**
@@ -21,9 +21,11 @@ import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository
 public class CategoryServiceImpl implements CategoryService {
 
   private final CategoryRepository categoryRepository;
+  private final UserService userService;
 
-  public CategoryServiceImpl(CategoryRepository categoryRepository) {
+  public CategoryServiceImpl(CategoryRepository categoryRepository, UserService userService) {
     this.categoryRepository = categoryRepository;
+    this.userService = userService;
   }
 
   /**
@@ -34,7 +36,8 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public CategoryDTO create(CategoryCreateDTO dto) {
-    Category category = mapToEntity(dto);
+    User user = userService.getAuthenticatedUser();    
+    Category category = mapToEntity(dto, user);
     Category saved = categoryRepository.save(category);
     return mapToDTO(saved);
   }
@@ -46,7 +49,9 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public List<CategoryDTO> getAll() {
-    return categoryRepository.findAll(Sort.by("name")).stream()
+    User user = userService.getAuthenticatedUser();
+
+    return categoryRepository.findByUserOrderByName(user).stream()
             .map(this::mapToDTO)
             .toList();
   }
@@ -59,7 +64,9 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public Optional<CategoryDTO> getById(Long id) {
-    return categoryRepository.findById(id)
+    User user = userService.getAuthenticatedUser();
+
+    return categoryRepository.findByIdAndUser(id, user)
             .map(this::mapToDTO);
   }
 
@@ -73,7 +80,9 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public CategoryDTO updateById(Long id, CategoryCreateDTO dto) {
-    Category category = categoryRepository.findById(id)
+    User user = userService.getAuthenticatedUser();
+
+    Category category = categoryRepository.findByIdAndUser(id, user)
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
     category.setName(dto.getName());
@@ -90,7 +99,8 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public void deleteById(Long id) {
-    categoryRepository.deleteById(id);
+    User user = userService.getAuthenticatedUser();
+    categoryRepository.deleteByIdAndUser(id, user);
   }
 
   /**
@@ -101,7 +111,8 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public boolean existsByNameIgnoreCase(String name) {
-    return categoryRepository.existsByNameIgnoreCase(name);
+    User user = userService.getAuthenticatedUser();
+    return categoryRepository.existsByNameIgnoreCaseAndUser(name, user);
   }
 
   /**
@@ -112,7 +123,9 @@ public class CategoryServiceImpl implements CategoryService {
    */
   @Override
   public List<CategoryDTO> getByType(TransactionType type) {
-    return categoryRepository.findAll().stream()
+    User user = userService.getAuthenticatedUser();
+
+    return categoryRepository.findByUserOrderByName(user).stream()
             .filter(c -> c.getType() == type)
             .map(this::mapToDTO)
             .toList();
@@ -124,10 +137,11 @@ public class CategoryServiceImpl implements CategoryService {
    * @param dto the input data
    * @return the Category entity
    */
-  private Category mapToEntity(CategoryCreateDTO dto) {
+  private Category mapToEntity(CategoryCreateDTO dto, User user) {
     return Category.builder()
             .name(dto.getName())
             .type(dto.getType())
+            .user(user)
             .build();
   }
 

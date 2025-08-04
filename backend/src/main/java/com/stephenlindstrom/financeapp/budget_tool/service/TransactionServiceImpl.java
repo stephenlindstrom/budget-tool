@@ -1,10 +1,8 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
@@ -14,6 +12,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.TransactionRepository;
 
@@ -26,10 +25,12 @@ public class TransactionServiceImpl implements TransactionService {
 
   private final TransactionRepository transactionRepository;
   private final CategoryRepository categoryRepository;
+  private final UserService userService;
 
-  public TransactionServiceImpl(TransactionRepository transactionRepository, CategoryRepository categoryRepository) {
+  public TransactionServiceImpl(TransactionRepository transactionRepository, CategoryRepository categoryRepository, UserService userService) {
     this.transactionRepository = transactionRepository;
     this.categoryRepository = categoryRepository;
+    this.userService = userService;
   }
 
   /**
@@ -40,7 +41,8 @@ public class TransactionServiceImpl implements TransactionService {
    */
   @Override
   public TransactionDTO create(TransactionCreateDTO dto) {
-    Transaction transaction = mapToEntity(dto);
+    User user = userService.getAuthenticatedUser();
+    Transaction transaction = mapToEntity(dto, user);
     Transaction saved = transactionRepository.save(transaction);
     return mapToDTO(saved);
   }
@@ -52,7 +54,8 @@ public class TransactionServiceImpl implements TransactionService {
    */
   @Override
   public List<TransactionDTO> getAll() {
-    return transactionRepository.findAll(Sort.by(Sort.Direction.DESC, "date"))
+    User user = userService.getAuthenticatedUser();
+    return transactionRepository.findByUserOrderByDateDesc(user)
             .stream()
             .map(this::mapToDTO)
             .toList();
@@ -66,7 +69,8 @@ public class TransactionServiceImpl implements TransactionService {
    */
   @Override
   public List<TransactionDTO> filter(TransactionFilter filter) {
-    List<Transaction> result = transactionRepository.findAll();
+    User user = userService.getAuthenticatedUser();
+    List<Transaction> result = transactionRepository.findByUserOrderByDateDesc(user);
 
     if (filter.getType() != null) {
       result = result.stream()
@@ -94,7 +98,6 @@ public class TransactionServiceImpl implements TransactionService {
 
     return result.stream()
             .map(this::mapToDTO)
-            .sorted(Comparator.comparing(TransactionDTO::getDate).reversed())
             .toList();
   }
 
@@ -108,10 +111,12 @@ public class TransactionServiceImpl implements TransactionService {
    */
   @Override
   public TransactionDTO updateById(Long id, TransactionCreateDTO dto) {
-    Transaction transaction = transactionRepository.findById(id)
+    User user = userService.getAuthenticatedUser();
+
+    Transaction transaction = transactionRepository.findByIdAndUser(id, user)
       .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
-    Category category = categoryRepository.findById(dto.getCategoryId())
+    Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
     transaction.setAmount(dto.getAmount());
@@ -131,7 +136,8 @@ public class TransactionServiceImpl implements TransactionService {
    */
   @Override
   public void deleteById(Long id) {
-    transactionRepository.deleteById(id);
+    User user = userService.getAuthenticatedUser();
+    transactionRepository.deleteByIdAndUser(id, user);
   }
 
   /**
@@ -167,8 +173,8 @@ public class TransactionServiceImpl implements TransactionService {
    * @return the mapped Transaction entity
    * @throws ResourceNotFoundException if the category is not found
    */
-  private Transaction mapToEntity(TransactionCreateDTO dto) {
-    Category category = categoryRepository.findById(dto.getCategoryId())
+  private Transaction mapToEntity(TransactionCreateDTO dto, User user) {
+    Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
     return Transaction.builder()
@@ -177,6 +183,7 @@ public class TransactionServiceImpl implements TransactionService {
             .type(dto.getType())
             .date(dto.getDate() != null ? dto.getDate() : LocalDate.now()) // fallback to today if null
             .description(dto.getDescription())
+            .user(user)
             .build();
   }
 }
