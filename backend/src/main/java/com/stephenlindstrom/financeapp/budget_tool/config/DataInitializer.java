@@ -140,6 +140,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(2900 + random.nextInt(400)))
                     .date(LocalDate.of(year, mon, 1))
                     .category(categories.get("Salary"))
+                    .type(categories.get("Salary").getType())
                     .user(user)
                     .build());
 
@@ -148,6 +149,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(1200))
                     .date(LocalDate.of(year, mon, 1))
                     .category(categories.get("Rent"))
+                    .type(categories.get("Rent").getType())
                     .user(user)
                     .build());
 
@@ -157,6 +159,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(40 + random.nextInt(60)))
                     .date(LocalDate.of(year, mon, 1 + random.nextInt(27)))
                     .category(categories.get("Groceries"))
+                    .type(categories.get("Groceries").getType())
                     .user(user)
                     .build());
           }
@@ -167,6 +170,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(20 + random.nextInt(30)))
                     .date(LocalDate.of(year, mon, 1 + random.nextInt(27)))
                     .category(categories.get("Dining"))
+                    .type(categories.get("Dining").getType())
                     .user(user)
                     .build());
           }
@@ -176,6 +180,7 @@ public class DataInitializer {
                   .amount(BigDecimal.valueOf(70 + random.nextInt(100)))
                   .date(LocalDate.of(year, mon, 10))
                   .category(categories.get("Utilities"))
+                  .type(categories.get("Utilities").getType())
                   .user(user)
                   .build());
 
@@ -185,6 +190,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(30 + random.nextInt(20)))
                     .date(LocalDate.of(year, mon, 1 + random.nextInt(27)))
                     .category(categories.get("Entertainment"))
+                    .type(categories.get("Entertainment").getType())
                     .user(user)
                     .build());
           }
@@ -195,6 +201,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(200 + random.nextInt(300)))
                     .date(LocalDate.of(year, mon, 1 + random.nextInt(27)))
                     .category(categories.get("Travel"))
+                    .type(categories.get("Travel").getType())
                     .user(user)
                     .build());
           }
@@ -205,6 +212,7 @@ public class DataInitializer {
                     .amount(BigDecimal.valueOf(25 + random.nextInt(75)))
                     .date(LocalDate.of(year, mon, 1 + random.nextInt(27)))
                     .category(categories.get("Gifts"))
+                    .type(categories.get("Gifts").getType())
                     .user(user)
                     .build());
           }
