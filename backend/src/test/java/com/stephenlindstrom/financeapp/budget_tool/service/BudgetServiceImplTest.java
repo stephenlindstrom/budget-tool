@@ -15,15 +15,18 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
@@ -36,6 +39,7 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -50,8 +54,22 @@ public class BudgetServiceImplTest {
   @Mock
   private TransactionService transactionService;
 
+  @Mock
+  private UserService userService;
+
   @InjectMocks
   private BudgetServiceImpl budgetService;
+
+  private User mockUser;
+
+  @Captor
+  private ArgumentCaptor<Budget> budgetCaptor;
+
+  @BeforeEach
+  void setup() {
+    mockUser = User.builder().id(1L).username("mockUser").build();
+    when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+  }
 
   @Test
   void testCreate_WithValidInput_ReturnsBudgetDTO() {
@@ -66,6 +84,7 @@ public class BudgetServiceImplTest {
             .id(1L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
     
     CategoryDTO categoryDTO = CategoryDTO.builder()
@@ -79,10 +98,11 @@ public class BudgetServiceImplTest {
             .value(BigDecimal.valueOf(500.00))
             .month(YearMonth.of(2025, 5))
             .category(savedCategory)
+            .user(mockUser)
             .build();
-
-    when(budgetRepository.save(any(Budget.class))).thenReturn(savedBudget);
-    when(categoryRepository.findById(1L)).thenReturn(Optional.of(savedCategory));
+    
+    when(budgetRepository.save(budgetCaptor.capture())).thenReturn(savedBudget);
+    when(categoryRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(savedCategory));
 
     // Act
     BudgetDTO result = budgetService.create(dto);
@@ -94,6 +114,9 @@ public class BudgetServiceImplTest {
     assertEquals(categoryDTO.getId(), result.getCategory().getId());
     assertEquals(categoryDTO.getName(), result.getCategory().getName());
     assertEquals(categoryDTO.getType(), result.getCategory().getType());
+
+    Budget capturedBudget = budgetCaptor.getValue();
+    assertEquals(mockUser, capturedBudget.getUser());
   }
 
   @Test
@@ -103,6 +126,7 @@ public class BudgetServiceImplTest {
             .id(1L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
 
     Budget savedBudget1 = Budget.builder()
@@ -110,6 +134,7 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(500.00))
           .month(YearMonth.of(2025, 5))
           .category(savedCategory)
+          .user(mockUser)
           .build();
 
     Budget savedBudget2 = Budget.builder()
@@ -117,11 +142,12 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(300.00))
           .month(YearMonth.of(2025, 4))
           .category(savedCategory)
+          .user(mockUser)
           .build();
 
     List<Budget> budgetList = new ArrayList<>(Arrays.asList(savedBudget1, savedBudget2));
 
-    when(budgetRepository.findAll(any(Sort.class))).thenReturn(budgetList);
+    when(budgetRepository.findByUserOrderByMonthDesc(mockUser)).thenReturn(budgetList);
 
     // Act
     List<BudgetDTO> dtos = budgetService.getAll();
@@ -140,20 +166,21 @@ public class BudgetServiceImplTest {
     assertEquals("Groceries", dtos.get(1).getCategory().getName());
     assertEquals(TransactionType.EXPENSE, dtos.get(0).getCategory().getType());
     assertEquals(TransactionType.EXPENSE, dtos.get(1).getCategory().getType());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testGetAll_WithNoEntries_ReturnsEmptyList() {
     // Arrange
-    List<Budget> budgetList = new ArrayList<>();
-
-    when(budgetRepository.findAll(any(Sort.class))).thenReturn(budgetList);
+    when(budgetRepository.findByUserOrderByMonthDesc(mockUser)).thenReturn(Collections.emptyList());
 
     // Act
     List<BudgetDTO> dtos = budgetService.getAll();
 
     // Assert
     assertTrue(dtos.isEmpty());
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
@@ -163,6 +190,7 @@ public class BudgetServiceImplTest {
             .id(1L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
 
     Budget savedBudget = Budget.builder()
@@ -170,10 +198,11 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(500.00))
           .month(YearMonth.of(2025, 5))
           .category(savedCategory)
+          .user(mockUser)
           .build();
 
 
-    when(budgetRepository.findById(1L)).thenReturn(Optional.of(savedBudget));
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(savedBudget));
     
     // Act
     Optional<BudgetDTO> result = budgetService.getById(1L);
@@ -186,18 +215,21 @@ public class BudgetServiceImplTest {
     assertEquals(1L, dto.getCategory().getId());
     assertEquals("Groceries", dto.getCategory().getName());
     assertEquals(TransactionType.EXPENSE, dto.getCategory().getType());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testGetById_IdDoesNotExist_ReturnsOptionalEmpty() {
     // Arrange
-    when(budgetRepository.findById(1L)).thenReturn(Optional.empty());
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.empty());
 
     // Act
     Optional<BudgetDTO> result = budgetService.getById(1L);
 
     // Assert
     assertTrue(result.isEmpty());
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
@@ -207,6 +239,7 @@ public class BudgetServiceImplTest {
             .id(1L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
 
     Budget existingBudget = Budget.builder()
@@ -214,6 +247,7 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(500.00))
           .month(YearMonth.of(2025, 5))
           .category(category)
+          .user(mockUser)
           .build();
     
     Budget updatedBudget = Budget.builder()
@@ -221,6 +255,7 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(300.00))
           .month(YearMonth.of(2025, 4))
           .category(category)
+          .user(mockUser)
           .build();
 
     BudgetCreateDTO dto = BudgetCreateDTO.builder()
@@ -229,8 +264,8 @@ public class BudgetServiceImplTest {
                             .categoryId(1L)
                             .build();
 
-    when(budgetRepository.findById(1L)).thenReturn(Optional.of(existingBudget));
-    when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(existingBudget));
+    when(categoryRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(category));
     when(budgetRepository.save(any(Budget.class))).thenReturn(updatedBudget);
 
     // Act
@@ -243,10 +278,11 @@ public class BudgetServiceImplTest {
     assertEquals(1L, result.getCategory().getId());
 
     verify(budgetRepository).save(any(Budget.class));
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
-  void testUpdateById_BudgetDoesNotExist_ThrowsResourceNotFoundException() {
+  void testUpdateById_BudgetNotFoundForUser_ThrowsResourceNotFoundException() {
     // Arrange
     BudgetCreateDTO dto = BudgetCreateDTO.builder()
                             .value(BigDecimal.valueOf(300.00))
@@ -254,7 +290,7 @@ public class BudgetServiceImplTest {
                             .categoryId(1L)
                             .build();
     
-    when(budgetRepository.findById(1L)).thenReturn(Optional.empty());
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.empty());
     
     // Act and Assert
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
@@ -263,15 +299,17 @@ public class BudgetServiceImplTest {
 
     assertEquals("Budget not found", exception.getMessage());
     verifyNoInteractions(categoryRepository);
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test 
-  void testUpdateById_CategoryDoesNotExist_ThrowsResourceNotFoundException() {
+  void testUpdateById_CategoryNotFoundForUser_ThrowsResourceNotFoundException() {
     // Arrange
     Category unrelatedCategory = Category.builder()
             .id(2L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
 
     Budget existingBudget = Budget.builder()
@@ -279,6 +317,7 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(500.00))
           .month(YearMonth.of(2025, 5))
           .category(unrelatedCategory)
+          .user(mockUser)
           .build();
 
     BudgetCreateDTO dto = BudgetCreateDTO.builder()
@@ -287,8 +326,8 @@ public class BudgetServiceImplTest {
                             .categoryId(1L)
                             .build();
     
-    when(budgetRepository.findById(1L)).thenReturn(Optional.of(existingBudget));
-    when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(existingBudget));
+    when(categoryRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.empty());
 
     // Act and Assert
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
@@ -297,33 +336,37 @@ public class BudgetServiceImplTest {
 
     assertEquals("Category not found", exception.getMessage());
     verify(budgetRepository, never()).save(any());
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
-  void testDeleteById_WithValidId_NoReturnValue() {
+  void testDeleteById_WithValidId_DeletesBudgetForUser() {
     // Act
     budgetService.deleteById(1L);
 
     // Assert
-    verify(budgetRepository).deleteById(1L);
+    verify(userService).getAuthenticatedUser();
+    verify(budgetRepository).deleteByIdAndUser(1L, mockUser);
   }
 
   @Test
   void testExistsByCategoryIdAndMonth_ValidInput_ReturnsTrue() {
     // Arrange
-    when(budgetRepository.existsByCategoryIdAndMonth(1L, YearMonth.of(2025, 5))).thenReturn(true);
+    when(budgetRepository.existsByCategoryIdAndMonthAndUser(1L, YearMonth.of(2025, 5), mockUser)).thenReturn(true);
 
     // Act and Assert
     assertTrue(budgetService.existsByCategoryIdAndMonth(1L, YearMonth.of(2025, 5)));
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testExistsByCategoryIdAndMonth_InvalidInput_ReturnsFalse() {
      // Arrange
-    when(budgetRepository.existsByCategoryIdAndMonth(1L, YearMonth.of(2025, 5))).thenReturn(false);
+    when(budgetRepository.existsByCategoryIdAndMonthAndUser(1L, YearMonth.of(2025, 5), mockUser)).thenReturn(false);
 
     // Act and Assert
     assertFalse(budgetService.existsByCategoryIdAndMonth(1L, YearMonth.of(2025, 5)));
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
@@ -333,6 +376,7 @@ public class BudgetServiceImplTest {
             .id(1L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
     
     CategoryDTO savedCategoryDTO = CategoryDTO.builder()
@@ -366,9 +410,10 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(500.00))
           .month(YearMonth.of(2025, 5))
           .category(savedCategory)
+          .user(mockUser)
           .build();
 
-    when(budgetRepository.findById(1L)).thenReturn(Optional.of(savedBudget));
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(savedBudget));
     when(transactionService.filter(any(TransactionFilter.class))).thenReturn(transactionDTOs);
 
     // Act
@@ -378,12 +423,14 @@ public class BudgetServiceImplTest {
     assertEquals(BigDecimal.valueOf(500.00), result.getBudgeted());
     assertEquals(BigDecimal.valueOf(150.00), result.getSpent());
     assertEquals(BigDecimal.valueOf(350.00), result.getRemaining());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testGetBudgetSummary_WithInvalidId_ThrowsResourceNotFoundException() {
     // Arrange
-    when(budgetRepository.findById(1L)).thenReturn(Optional.empty());
+    when(budgetRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.empty());
 
     // Act and Assert
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
@@ -391,6 +438,8 @@ public class BudgetServiceImplTest {
     });
 
     assertEquals("Budget not found", exception.getMessage());
+    verify(userService).getAuthenticatedUser();
+    verifyNoInteractions(transactionService);
   }
 
   @Test
@@ -400,6 +449,7 @@ public class BudgetServiceImplTest {
             .id(1L)
             .name("Groceries")
             .type(TransactionType.EXPENSE)
+            .user(mockUser)
             .build();
 
     Budget savedBudget1 = Budget.builder()
@@ -407,6 +457,7 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(500.00))
           .month(YearMonth.of(2025, 5))
           .category(savedCategory)
+          .user(mockUser)
           .build();
 
     Budget savedBudget2 = Budget.builder()
@@ -414,10 +465,11 @@ public class BudgetServiceImplTest {
           .value(BigDecimal.valueOf(300.00))
           .month(YearMonth.of(2025, 5))
           .category(savedCategory)
+          .user(mockUser)
           .build();
 
     List<Budget> budgetList = new ArrayList<>(Arrays.asList(savedBudget1, savedBudget2));
-    when(budgetRepository.findByMonth(YearMonth.of(2025, 5))).thenReturn(budgetList);
+    when(budgetRepository.findByMonthAndUser(YearMonth.of(2025, 5), mockUser)).thenReturn(budgetList);
 
     // Act
     List<BudgetDTO> result = budgetService.getByMonth(YearMonth.of(2025, 5));
@@ -436,25 +488,27 @@ public class BudgetServiceImplTest {
     assertEquals("Groceries", result.get(1).getCategory().getName());
     assertEquals(TransactionType.EXPENSE, result.get(0).getCategory().getType());
     assertEquals(TransactionType.EXPENSE, result.get(1).getCategory().getType());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testGetByMonth_WithoutEntries_ReturnsEmptyList() {
     // Arrange
-    List<Budget> budgetList = new ArrayList<>();
-    when(budgetRepository.findByMonth(YearMonth.of(2025, 5))).thenReturn(budgetList);
+    when(budgetRepository.findByMonthAndUser(YearMonth.of(2025, 5), mockUser)).thenReturn(Collections.emptyList());
 
     // Act
     List<BudgetDTO> result = budgetService.getByMonth(YearMonth.of(2025, 5));
 
     // Assert
     assertTrue(result.isEmpty());
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test 
   void testGetAvailableMonths_WithEntries_ReturnsListOfMonthDTOs() {
     // Arrange
-    when(budgetRepository.findDistinctMonths()).thenReturn(List.of(YearMonth.of(2025, 3), YearMonth.of(2025, 4), YearMonth.of(2025,5)));
+    when(budgetRepository.findDistinctMonthsByUser(mockUser)).thenReturn(List.of(YearMonth.of(2025, 3), YearMonth.of(2025, 4), YearMonth.of(2025,5)));
 
     // Act
     List<MonthDTO> result = budgetService.getAvailableMonths();
@@ -467,18 +521,20 @@ public class BudgetServiceImplTest {
     assertEquals("April 2025", result.get(1).getDisplay());
     assertEquals("2025-03", result.get(2).getValue());
     assertEquals("March 2025", result.get(2).getDisplay());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testGetAvailableMonths_WithoutEntries_ReturnsEmptyList() {
     // Arrange
-    List<YearMonth> months = new ArrayList<>();
-    when(budgetRepository.findDistinctMonths()).thenReturn(months);
+    when(budgetRepository.findDistinctMonthsByUser(mockUser)).thenReturn(Collections.emptyList());
 
     // Act
     List<MonthDTO> result = budgetService.getAvailableMonths();
 
     // Assert
     assertTrue(result.isEmpty());
+    verify(userService).getAuthenticatedUser();
   }
 }

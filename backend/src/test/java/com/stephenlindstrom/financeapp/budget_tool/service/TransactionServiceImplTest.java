@@ -14,18 +14,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Sort;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
@@ -35,6 +36,7 @@ import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.TransactionRepository;
 
@@ -46,10 +48,18 @@ public class TransactionServiceImplTest {
   @Mock
   private CategoryRepository categoryRepository;
 
+  @Mock
+  private UserService userService;
+
   @InjectMocks
   private TransactionServiceImpl transactionService;
 
   private static List<Transaction> transactionBatch;
+
+  private User mockUser;
+
+  @Captor
+  private ArgumentCaptor<Transaction> transactionCaptor;
 
   @BeforeAll
   static void initData() {
@@ -76,7 +86,7 @@ public class TransactionServiceImplTest {
                                 .amount(BigDecimal.valueOf(100.00))
                                 .category(category1)
                                 .type(category1.getType())
-                                .date(LocalDate.of(2025, 5, 1))
+                                .date(LocalDate.of(2025, 6, 4))
                                 .description("food")
                                 .build();
 
@@ -85,7 +95,7 @@ public class TransactionServiceImplTest {
                                 .amount(BigDecimal.valueOf(50.00))
                                 .category(category2)
                                 .type(category2.getType())
-                                .date(LocalDate.of(2025, 6, 4))
+                                .date(LocalDate.of(2025, 5, 1))
                                 .description("gas")
                                 .build();
     
@@ -94,7 +104,7 @@ public class TransactionServiceImplTest {
                                 .amount(BigDecimal.valueOf(150.00))
                                 .category(category2)
                                 .type(category2.getType())
-                                .date(LocalDate.of(2024, 12, 23))
+                                .date(LocalDate.of(2025, 4, 15))
                                 .description("repairs")
                                 .build();
 
@@ -103,11 +113,17 @@ public class TransactionServiceImplTest {
                                 .amount(BigDecimal.valueOf(2000.00))
                                 .category(category3)
                                 .type(category3.getType())
-                                .date(LocalDate.of(2025, 4, 25))
+                                .date(LocalDate.of(2024, 12, 23))
                                 .description("paycheck")
                                 .build();
 
     transactionBatch = Arrays.asList(transaction1, transaction2, transaction3, transaction4);
+  }
+
+  @BeforeEach
+  void setup() {
+    mockUser = User.builder().id(1L).username("mockUser").build();
+    when(userService.getAuthenticatedUser()).thenReturn(mockUser);
   }
 
   @Test
@@ -123,6 +139,7 @@ public class TransactionServiceImplTest {
         .id(categoryId)
         .name("Groceries")
         .type(type)
+        .user(mockUser)
         .build();
 
     TransactionCreateDTO dto = TransactionCreateDTO.builder()
@@ -140,15 +157,17 @@ public class TransactionServiceImplTest {
         .type(type)
         .date(date)
         .description(description)
+        .user(mockUser)
         .build();
 
-    when(transactionRepository.save(any(Transaction.class))).thenReturn(savedTransaction);
-    when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));
+    when(transactionRepository.save(transactionCaptor.capture())).thenReturn(savedTransaction);
+    when(categoryRepository.findByIdAndUser(categoryId, mockUser)).thenReturn(Optional.of(savedCategory));
 
     // Act
     TransactionDTO result = transactionService.create(dto);
 
     // Assert
+    verify(userService).getAuthenticatedUser();
     verify(transactionRepository).save(any(Transaction.class));
 
     assertEquals(1L, result.getId());
@@ -161,6 +180,8 @@ public class TransactionServiceImplTest {
     assertEquals(categoryId, categoryDTO.getId());
     assertEquals("Groceries", categoryDTO.getName());
     assertEquals(type, categoryDTO.getType());
+
+    assertEquals(mockUser, transactionCaptor.getValue().getUser());
   }
 
   @Test
@@ -174,7 +195,7 @@ public class TransactionServiceImplTest {
         .description("food")
         .build();
 
-    when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+    when(categoryRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.empty());
 
     // Act
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
@@ -183,6 +204,7 @@ public class TransactionServiceImplTest {
 
     assertEquals("Category not found", exception.getMessage());
     verify(transactionRepository, never()).save(any(Transaction.class));
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
@@ -197,6 +219,7 @@ public class TransactionServiceImplTest {
         .id(categoryId)
         .name("Groceries")
         .type(type)
+        .user(mockUser)
         .build();
 
     TransactionCreateDTO dto = TransactionCreateDTO.builder()
@@ -205,18 +228,27 @@ public class TransactionServiceImplTest {
         .type(type)
         .build();
 
-    when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(savedCategory));    
-    when(transactionRepository.save(any(Transaction.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+    Transaction savedTransaction = Transaction.builder()
+        .id(1L)
+        .amount(amount)
+        .category(savedCategory)
+        .type(type)
+        .date(now)
+        .description(null)
+        .user(mockUser)
+        .build();
 
-    ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
+    when(categoryRepository.findByIdAndUser(categoryId, mockUser)).thenReturn(Optional.of(savedCategory));
+    when(transactionRepository.save(transactionCaptor.capture())).thenReturn(savedTransaction);    
 
     // Act
     TransactionDTO result = transactionService.create(dto);
 
     // Assert
-    verify(transactionRepository).save(captor.capture());
-    Transaction captured = captor.getValue();
+    verify(userService).getAuthenticatedUser();
+    verify(transactionRepository).save(any(Transaction.class));
+    
+    Transaction captured = transactionCaptor.getValue();
 
     assertEquals(now, captured.getDate());
     assertNull(captured.getDescription());
@@ -250,12 +282,14 @@ public class TransactionServiceImplTest {
         .id(1L)
         .name("Groceries")
         .type(type)
+        .user(mockUser)
         .build();
 
     Category savedCategory2 = Category.builder()
         .id(2L)
         .name("Car")
         .type(type)
+        .user(mockUser)
         .build();
     
     Transaction savedTransaction1 = Transaction.builder()
@@ -265,6 +299,7 @@ public class TransactionServiceImplTest {
         .type(type)
         .date(date1)
         .description(description1)
+        .user(mockUser)
         .build();
 
     Transaction savedTransaction2 = Transaction.builder()
@@ -274,11 +309,12 @@ public class TransactionServiceImplTest {
         .type(type)
         .date(date2)
         .description(description2)
+        .user(mockUser)
         .build();
 
     List<Transaction> transactionList = new ArrayList<>(Arrays.asList(savedTransaction1, savedTransaction2));
 
-    when(transactionRepository.findAll(any(Sort.class))).thenReturn(transactionList.stream().sorted(Comparator.comparing(Transaction::getDate).reversed()).toList());
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(transactionList);
 
     // Act
     List<TransactionDTO> dtos = transactionService.getAll();
@@ -305,20 +341,21 @@ public class TransactionServiceImplTest {
     assertEquals("Car", categoryDTO2.getName());
     assertEquals(type, categoryDTO1.getType());
     assertEquals(type, categoryDTO2.getType());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testGetAll_WithNoEntries_ReturnsEmptyList() {
     // Arrange
-    List<Transaction> transactionList = new ArrayList<>();
-
-    when(transactionRepository.findAll(any(Sort.class))).thenReturn(transactionList.stream().sorted(Comparator.comparing(Transaction::getDate).reversed()).toList());
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(Collections.emptyList());
 
     // Act
     List<TransactionDTO> dtos = transactionService.getAll();
 
     // Assert
     assertTrue(dtos.isEmpty());
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
@@ -331,12 +368,14 @@ public class TransactionServiceImplTest {
         .id(1L)
         .name("Groceries")
         .type(type1)
+        .user(mockUser)
         .build();
 
      Category category2 = Category.builder()
         .id(2L)
         .name("Salary")
         .type(type2)
+        .user(mockUser)
         .build();
     
     Transaction existingTransaction = Transaction.builder()
@@ -346,6 +385,7 @@ public class TransactionServiceImplTest {
         .type(type1)
         .date(LocalDate.of(2025, 6, 24))
         .description("Fry's")
+        .user(mockUser)
         .build();
     
     Transaction updatedTransaction = Transaction.builder()
@@ -355,6 +395,7 @@ public class TransactionServiceImplTest {
         .type(type2)
         .date(LocalDate.of(2024, 4, 23))
         .description("Job")
+        .user(mockUser)
         .build();
 
     TransactionCreateDTO dto = TransactionCreateDTO.builder()
@@ -365,9 +406,10 @@ public class TransactionServiceImplTest {
         .description("Job")
         .build();
 
-    when(transactionRepository.findById(1L)).thenReturn(Optional.of(existingTransaction));
-    when(categoryRepository.findById(dto.getCategoryId())).thenReturn(Optional.of(category2));
+    when(transactionRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(existingTransaction));
+    when(categoryRepository.findByIdAndUser(dto.getCategoryId(), mockUser)).thenReturn(Optional.of(category2));
     when(transactionRepository.save(any(Transaction.class))).thenReturn(updatedTransaction);
+    
     // Act
     TransactionDTO result = transactionService.updateById(1L, dto);
 
@@ -379,6 +421,7 @@ public class TransactionServiceImplTest {
     assertEquals(LocalDate.of(2024, 4, 23), result.getDate());
     assertEquals("Job", result.getDescription());
 
+    verify(userService).getAuthenticatedUser();
     verify(transactionRepository).save(any(Transaction.class));
   }
 
@@ -393,7 +436,7 @@ public class TransactionServiceImplTest {
         .description("Job")
         .build();
 
-    when(transactionRepository.findById(1L)).thenReturn(Optional.empty());
+    when(transactionRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.empty());
 
     // Act and Assert
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
@@ -402,7 +445,9 @@ public class TransactionServiceImplTest {
     
     assertEquals("Transaction not found", exception.getMessage());
 
+    verify(userService).getAuthenticatedUser();
     verifyNoInteractions(categoryRepository);
+    verify(transactionRepository, never()).save(any(Transaction.class));
   }
 
   @Test
@@ -412,6 +457,7 @@ public class TransactionServiceImplTest {
         .id(1L)
         .name("Groceries")
         .type(TransactionType.EXPENSE)
+        .user(mockUser)
         .build();
 
     Transaction existingTransaction = Transaction.builder()
@@ -421,6 +467,7 @@ public class TransactionServiceImplTest {
         .type(TransactionType.EXPENSE)
         .date(LocalDate.of(2025, 6, 24))
         .description("Fry's")
+        .user(mockUser)
         .build();
 
     TransactionCreateDTO dto = TransactionCreateDTO.builder()
@@ -431,15 +478,17 @@ public class TransactionServiceImplTest {
         .description("Job")
         .build();
 
-    when(transactionRepository.findById(1L)).thenReturn(Optional.of(existingTransaction));
-    when(categoryRepository.findById(2L)).thenReturn(Optional.empty());
+    when(transactionRepository.findByIdAndUser(1L, mockUser)).thenReturn(Optional.of(existingTransaction));
+    when(categoryRepository.findByIdAndUser(2L, mockUser)).thenReturn(Optional.empty());
 
     // Act and Assert
     ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
       transactionService.updateById(1L, dto);
     });
     
-    verify(categoryRepository).findById(2L);
+    verify(userService).getAuthenticatedUser();
+    verify(transactionRepository).findByIdAndUser(1L, mockUser);
+    verify(categoryRepository).findByIdAndUser(2L, mockUser);
 
     assertEquals("Category not found", exception.getMessage());
 
@@ -447,30 +496,32 @@ public class TransactionServiceImplTest {
   }
 
   @Test
-  void testDeleteById_WithValidId_NoReturnValue() {
+  void testDeleteById_WithValidId_DeletesTransactionByUser() {
     // Act
     transactionService.deleteById(1L);
 
     // Assert
-    verify(transactionRepository).deleteById(1L);
+    verify(userService).getAuthenticatedUser();
+    verify(transactionRepository).deleteByIdAndUser(1L, mockUser);
   }
 
   @Test
   void testFilter_NoFilterCriteria_ReturnsAllTransactions() {
     //Arrange
-    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(transactionBatch);
 
     // Act
     List<TransactionDTO> dtos = transactionService.filter(new TransactionFilter()); 
 
     // Assert
     assertEquals(4, dtos.size());
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testFilter_FilterByExpenseType_ReturnsAllExpenses() {
     // Arrange
-    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(transactionBatch);
     TransactionFilter filter = new TransactionFilter(TransactionType.EXPENSE, null, null, null);
 
     // Act
@@ -481,12 +532,14 @@ public class TransactionServiceImplTest {
     assertEquals(TransactionType.EXPENSE, dtos.get(0).getType());
     assertEquals(TransactionType.EXPENSE, dtos.get(1).getType());
     assertEquals(TransactionType.EXPENSE, dtos.get(2).getType());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testFilter_FilterByCategoryId2_ReturnsTransactionsWithCategoryId2() {
     // Arrange
-    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(transactionBatch);
     TransactionFilter filter = new TransactionFilter(null, 2L, null, null);
 
     // Act
@@ -496,12 +549,14 @@ public class TransactionServiceImplTest {
     assertEquals(2, dtos.size());
     assertEquals(2L, dtos.get(0).getCategory().getId());
     assertEquals(2L, dtos.get(1).getCategory().getId());
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testFilter_FilterByDate_ReturnsTransactionsBetweenStartAndEndDates() {
     // Arrange
-    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(transactionBatch);
     TransactionFilter filter = new TransactionFilter(null, null, LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 1));
 
     // Act
@@ -513,20 +568,25 @@ public class TransactionServiceImplTest {
     assertTrue(!dtos.get(0).getDate().isAfter(filter.getEndDate()));
     assertTrue(!dtos.get(1).getDate().isBefore(filter.getStartDate()));
     assertTrue(!dtos.get(1).getDate().isAfter(filter.getEndDate()));
+
+    verify(userService).getAuthenticatedUser();
   }
 
   @Test
   void testFilter_FilterByAllCriteria_ReturnsCorrectlyFilteredTransactions() {
     // Arrange
-    when(transactionRepository.findAll()).thenReturn(transactionBatch);
+    when(transactionRepository.findByUserOrderByDateDesc(mockUser)).thenReturn(transactionBatch);
     TransactionFilter filter = new TransactionFilter(TransactionType.EXPENSE, 2L, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31));
 
     // Act
     List<TransactionDTO> dtos = transactionService.filter(filter);
 
     // Assert
-    assertEquals(1, dtos.size());
+    assertEquals(2, dtos.size());
     assertEquals(2L, dtos.get(0).getId());
+    assertEquals(3L, dtos.get(1).getId());
+
+    verify(userService).getAuthenticatedUser();
   }
 
 }
