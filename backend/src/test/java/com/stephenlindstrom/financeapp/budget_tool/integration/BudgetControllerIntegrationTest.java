@@ -21,6 +21,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 
@@ -43,6 +44,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     ); 
 
@@ -83,6 +85,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
 
@@ -90,12 +93,14 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
                       .value(BigDecimal.valueOf(500.00))
                       .month(YearMonth.of(2025, 6))
                       .category(category)
+                      .user(testUser)
                       .build();
     
     Budget budget2 = Budget.builder()
                       .value(BigDecimal.valueOf(400.00))
                       .month(YearMonth.of(2025, 5))
                       .category(category)
+                      .user(testUser)
                       .build();
 
     budgetRepository.saveAll(List.of(budget1, budget2));
@@ -115,10 +120,63 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  void shouldOnlyReturnCurrentUserBudgets() throws Exception {
+    User anotherUser = userRepository.save(
+      User.builder().username("anotherUser").password("hashedPassword").build()
+    );                 
+
+    Category category1 = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .user(testUser)
+                        .build()
+    );
+
+    Category category2 = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .user(anotherUser)
+                        .build()
+    );
+
+    Budget budget1 = Budget.builder()
+                      .value(BigDecimal.valueOf(500.00))
+                      .month(YearMonth.of(2025, 6))
+                      .category(category1)
+                      .user(testUser)
+                      .build();
+    
+    Budget budget2 = Budget.builder()
+                      .value(BigDecimal.valueOf(400.00))
+                      .month(YearMonth.of(2025, 5))
+                      .category(category1)
+                      .user(testUser)
+                      .build();
+
+    Budget budget3 = Budget.builder()
+                      .value(BigDecimal.valueOf(600.00))
+                      .month(YearMonth.of(2025, 7))
+                      .category(category2)
+                      .user(anotherUser)
+                      .build();
+
+    budgetRepository.saveAll(List.of(budget1, budget2, budget3));
+
+    mockMvc.perform(get("/api/budgets")
+            .with(bearerToken()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].value").value(500.00))
+            .andExpect(jsonPath("$[1].value").value(400.00))
+            .andExpect(jsonPath("$[?(@.value == 600.00)]").doesNotExist());
+  }
+
+  @Test
   void shouldReturnBudgetById() throws Exception {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
 
@@ -126,6 +184,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
                       .value(BigDecimal.valueOf(500.00))
                       .month(YearMonth.of(2025, 6))
                       .category(category)
+                      .user(testUser)
                       .build()
     );
 
@@ -146,10 +205,37 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
   }
 
   @Test
+  void shouldReturn404WhenAccessingAnotherUsersBudgetById() throws Exception {
+    User anotherUser = userRepository.save(
+      User.builder().username("anotherUser").password("hashedPassword").build()
+    );
+
+    Category category = categoryRepository.save(Category.builder()
+                        .name("Groceries")
+                        .type(TransactionType.EXPENSE)
+                        .user(anotherUser)
+                        .build()
+    );
+
+    Budget budget = budgetRepository.save(Budget.builder()
+                      .value(BigDecimal.valueOf(500.00))
+                      .month(YearMonth.of(2025, 6))
+                      .category(category)
+                      .user(anotherUser)
+                      .build()
+    );
+
+    mockMvc.perform(get("/api/budgets/{id}", budget.getId())
+            .with(bearerToken()))
+            .andExpect(status().isNotFound());
+  }
+
+  @Test
   void shouldReturnAvailableMonths() throws Exception {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
 
@@ -157,12 +243,14 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
                       .value(BigDecimal.valueOf(500.00))
                       .month(YearMonth.of(2025, 6))
                       .category(category)
+                      .user(testUser)
                       .build();
     
     Budget budget2 = Budget.builder()
                       .value(BigDecimal.valueOf(400.00))
                       .month(YearMonth.of(2025, 5))
                       .category(category)
+                      .user(testUser)
                       .build();
 
     budgetRepository.saveAll(List.of(budget1, budget2));
@@ -182,6 +270,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
     
@@ -189,6 +278,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
                       .value(BigDecimal.valueOf(500.00))
                       .month(YearMonth.of(2025, 5))
                       .category(category)
+                      .user(testUser)
                       .build()
     );
 
@@ -215,6 +305,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
 
@@ -236,6 +327,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
 
@@ -243,6 +335,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
                       .value(BigDecimal.valueOf(500.00))
                       .month(YearMonth.of(2025, 5))
                       .category(category)
+                      .user(testUser)
                       .build()
     );
 
@@ -264,6 +357,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
     Category category = categoryRepository.save(Category.builder()
                         .name("Groceries")
                         .type(TransactionType.EXPENSE)
+                        .user(testUser)
                         .build()
     );
 
@@ -271,6 +365,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
                       .value(BigDecimal.valueOf(500.00))
                       .month(YearMonth.of(2025, 6))
                       .category(category)
+                      .user(testUser)
                       .build()
     );
 
@@ -278,7 +373,7 @@ public class BudgetControllerIntegrationTest extends AbstractIntegrationTest {
             .with(bearerToken()))
             .andExpect(status().isNoContent());
 
-    assertFalse(budgetRepository.findById(budget.getId()).isPresent());
+    assertFalse(budgetRepository.findByIdAndUser(budget.getId(), testUser).isPresent());
   }
 
   @Test

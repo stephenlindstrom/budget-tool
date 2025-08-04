@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
+import com.stephenlindstrom.financeapp.budget_tool.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -31,17 +33,22 @@ public abstract class AbstractIntegrationTest {
   @Autowired
   protected ObjectMapper objectMapper;
 
+  @Autowired
+  protected UserRepository userRepository;
+
   protected String testUsername;
   protected String testPassword;
   protected String jwtToken;
+  protected User testUser;
 
   @BeforeEach
-  void authenticateTestUser() throws Exception {
+  void setUpTestUser() throws Exception {
     testUsername = "user_" + UUID.randomUUID();
     testPassword = "testPassword";
 
     registerTestUser(testUsername, testPassword);
     jwtToken = loginAndGetToken(testUsername, testPassword);
+    testUser = userRepository.findByUsername(testUsername).orElseThrow();
   }
 
   private void registerTestUser(String username, String password) throws Exception {
