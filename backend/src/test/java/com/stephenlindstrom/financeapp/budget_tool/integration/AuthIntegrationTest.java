@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 
 import io.jsonwebtoken.Jwts;
@@ -102,7 +101,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
     
     String jsonResponse = result.getResponse().getContentAsString();
 
-    String token = new ObjectMapper()
+    String token = objectMapper
         .readTree(jsonResponse)
         .get("token")
         .asText();
@@ -146,7 +145,7 @@ public class AuthIntegrationTest extends AbstractIntegrationTest {
     
     String jsonResponse = result.getResponse().getContentAsString();
 
-    String token = new ObjectMapper()
+    String token = objectMapper
         .readTree(jsonResponse)
         .get("token")
         .asText();
