@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
@@ -118,6 +119,7 @@ public class BudgetServiceImpl implements BudgetService {
    * @param id the ID of the budget to delete
    */
   @Override
+  @Transactional
   public void deleteById(Long id) {
     User user = userService.getAuthenticatedUser();
     budgetRepository.deleteByIdAndUser(id, user);

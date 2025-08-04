@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
@@ -135,6 +136,7 @@ public class TransactionServiceImpl implements TransactionService {
    * @param id the ID of the transaction to delete
    */
   @Override
+  @Transactional
   public void deleteById(Long id) {
     User user = userService.getAuthenticatedUser();
     transactionRepository.deleteByIdAndUser(id, user);

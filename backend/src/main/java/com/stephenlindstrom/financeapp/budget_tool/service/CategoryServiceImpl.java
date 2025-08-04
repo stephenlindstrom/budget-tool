@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
@@ -98,6 +99,7 @@ public class CategoryServiceImpl implements CategoryService {
    * @param id the ID of the category to delete
    */
   @Override
+  @Transactional
   public void deleteById(Long id) {
     User user = userService.getAuthenticatedUser();
     categoryRepository.deleteByIdAndUser(id, user);
