@@ -8,11 +8,13 @@ A React frontend is planned for future development. The backend is deployed on *
 
 ## ✅ Key Features
 
+- JWT-based user authentication and authorization
 - Add, update, and delete transactions
 - Assign categories and transaction types (income/expense)
 - Set monthly budgets by category
 - Filter transactions by date, category, and type
 - Retrieve saved budget months
+- User-specific data access: transactions, categories, and budgets are scoped to the authenticated user
 - Swagger UI for API exploration and demo
 - Full test coverage (unit + integration)
 - Profiles for local PostgreSQL and deployed H2
@@ -21,7 +23,7 @@ A React frontend is planned for future development. The backend is deployed on *
 
 ## 🔧 Tech Stack
 
-- **Java 21**, **Spring Boot**, **Spring Data JPA**
+- **Java 21**, **Spring Boot**, **Spring Data JPA**, **Spring Security (JWT)**
 - **PostgreSQL** (local), **H2 In-Memory DB** (deployed)
 - **JUnit 5**, **Mockito**, **MockMvc**
 - **Docker**, **Swagger/OpenAPI**
@@ -36,6 +38,21 @@ The app is deployed on **Render** using Docker and runs with an **H2 in-memory d
 Explore it via the Swagger UI:
 
 🔗 [https://budget-backend-gkce.onrender.com/swagger-ui/index.html](https://budget-backend-gkce.onrender.com/swagger-ui/index.html)
+
+---
+
+## 🔐 Authentication & Authorization
+
+- Users must register and log in to receive a JWT
+- JWT is required to access all secured endpoints (transactions, categories, budgets)
+- Each user can only access and modify their own data
+- All integration and unit tests verify user-based data isolation
+
+Example request with bearer token:
+```
+GET /api/transactions
+Authorization: Bearer <your_token_here>
+```
 
 ---
 
@@ -73,7 +90,19 @@ CREATE USER budget_user WITH ENCRYPTED PASSWORD 'password';
 GRANT ALL PRIVILEGES ON DATABASE budget_db TO budget_user;
 ```
 
-### 3. Run with production profile
+### 3. Set Environment Variable
+The app expects a secret key for JWT authentication to be provided via an environment variable:
+
+```bash
+export JWT_SECRET=your-secret-key-here
+```
+
+This variable is injected at runtime via:
+```properties
+jwt.secret=${JWT_SECRET}
+```
+
+### 4. Run with production profile
 
 This command starts the application using the `prod` profile, which connects to your local PostgreSQL database:
 
@@ -81,7 +110,7 @@ This command starts the application using the `prod` profile, which connects to 
 ./mvnw -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-### 4. Access Swagger UI
+### 5. Access Swagger UI
 
 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
@@ -122,6 +151,7 @@ budget-tool/
 │       │   │                   ├── errors/
 │       │   │                   ├── model/
 │       │   │                   ├── repository/
+│       │   │                   ├── security/
 │       │   │                   └── service/
 │       │   └── resources/
 │       │       ├── application.properties
@@ -143,9 +173,6 @@ budget-tool/
 ---
 
 ## 🚧 Planned Features
-
-- **User Authentication**
-  - JWT-based login, signup, and logout functionality
 
 - **Frontend Dashboard (React)**
   - Responsive user interface
