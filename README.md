@@ -35,9 +35,18 @@ A React frontend is planned for future development. The backend is deployed on *
 ## 🚀 Live Demo
 
 The app is deployed on **Render** using Docker and runs with an **H2 in-memory database** preloaded with demo data.  
-Explore it via the Swagger UI:
+You can explore all endpoints interactively via the Swagger UI:
 
 🔗 [https://budget-backend-gkce.onrender.com/swagger-ui/index.html](https://budget-backend-gkce.onrender.com/swagger-ui/index.html)
+
+### Try It Out
+
+To access protected endpoints:
+
+1. Go to `GET /api/auth/demo-token` at the bottom and click **"Try it out" → "Execute"**  
+2. Copy the returned token from the response  
+3. Click **"Authorize"** (top right) and paste the token into the `Value:` field
+4. Click **"Authorize"** again — you're now authenticated
 
 ---
 
