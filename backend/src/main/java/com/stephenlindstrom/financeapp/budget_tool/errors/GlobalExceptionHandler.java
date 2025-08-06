@@ -1,5 +1,6 @@
 package com.stephenlindstrom.financeapp.budget_tool.errors;
 
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,5 +33,10 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleIllegalArguments(IllegalArgumentException ex) {
     return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage()));
   } 
+
+  @ExceptionHandler(DateTimeParseException.class)
+  public ResponseEntity<ErrorResponse> handleDateTimeParseException(DateTimeParseException ex) {
+    return ResponseEntity.badRequest().body(new ErrorResponse("Invalid date format. Expected YYYY-MM"));
+  }
 
 }
