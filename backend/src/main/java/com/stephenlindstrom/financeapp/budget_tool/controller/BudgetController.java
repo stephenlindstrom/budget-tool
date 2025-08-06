@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.stephenlindstrom.financeapp.budget_tool.converter.YearMonthConverter;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
@@ -213,14 +214,66 @@ public class BudgetController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(
+    summary = "Get budgets for given month",
+    description = "Returns a list of all budgets for a given year-month combination."
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Budgets found and returned"),
+    @ApiResponse(responseCode = "400", description = "Invalid month format",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(name = "InvalidMonth", value = "{\"message\": \"Invalid date format. Expected YYYY-MM\"}")
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
+      )
+    )
+  })
   @GetMapping("/month/{month}")
   public ResponseEntity<List<BudgetDTO>> getByMonth(
-    @Parameter(description = "Month of budgets to retrieve")
+    @Parameter(description = "Month of budgets to retrieve in YYYY-MM format", example = "2025-06")
     @PathVariable String month
   ) {
       YearMonthConverter converter = new YearMonthConverter();
       YearMonth convertedMonth = converter.convertToEntityAttribute(month);
       return ResponseEntity.ok(budgetService.getByMonth(convertedMonth));
   }
+
+  @Operation(
+    summary = "Get budget summaries for given month",
+    description = "Returns a list of budget summaries for a given year-month combination."
+  )
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Budget summaries found and returned"),
+    @ApiResponse(responseCode = "400", description = "Invalid month format",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(name = "InvalidMonth", value = "{\"message\": \"Invalid date format. Expected YYYY-MM\"}")
+      )
+    ),
+    @ApiResponse(responseCode = "500", description = "Server error",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = ErrorResponse.class),
+        examples = @ExampleObject(name = "ServerErrorExample", value = "{\"message\": \"An unexpected error occurred\"}")
+      )
+    )
+  })
+  @GetMapping("/summary/{month}")
+  public ResponseEntity<List<BudgetSummaryDTO>> getMonthlySummaries(
+    @Parameter(description = "Month of summaries to retrieve in YYYY-MM format")
+    @PathVariable String month
+  ) {
+    YearMonth ym = new YearMonthConverter().convertToEntityAttribute(month);
+    return ResponseEntity.ok(budgetService.getMonthlyBudgetSummaries(ym));
+  }
+
   
 }
