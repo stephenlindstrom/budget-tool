@@ -160,15 +160,23 @@ public class BudgetServiceImpl implements BudgetService {
                               .endDate(budget.getMonth().atEndOfMonth())
                               .build();
 
-    List<TransactionDTO> expenseTransactions = transactionService.filter(filter);
-
-    BigDecimal spent = expenseTransactions.stream().map(TransactionDTO::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal spent = transactionService.filter(filter).stream()
+    .map(TransactionDTO::getAmount)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
     BigDecimal budgeted = budget.getValue();
 
     BigDecimal remaining = budgeted.subtract(spent);
 
+    CategoryDTO categoryDTO = CategoryDTO.builder()
+                                .id(budget.getCategory().getId())
+                                .name(budget.getCategory().getName())
+                                .type(budget.getCategory().getType())
+                                .build();
+
     BudgetSummaryDTO budgetSummary = BudgetSummaryDTO.builder()
+                                      .id(budget.getId())
+                                      .category(categoryDTO)
                                       .budgeted(budgeted)
                                       .spent(spent)
                                       .remaining(remaining)
@@ -176,6 +184,50 @@ public class BudgetServiceImpl implements BudgetService {
 
     return budgetSummary;
     
+  }
+
+  /**
+   * Generates budget summaries for all budgets in a given month.
+   * 
+   * @param month the year-month to filter budgets by
+   * @return a list of summary DTOs for each budget
+   */
+
+  @Override
+  public List<BudgetSummaryDTO> getMonthlyBudgetSummaries(YearMonth month) {
+    User user = userService.getAuthenticatedUser();
+    List<Budget> budgets = budgetRepository.findByMonthAndUser(month, user);
+
+    return budgets.stream().map(budget -> {
+      BigDecimal budgeted = budget.getValue();
+
+      TransactionFilter filter = TransactionFilter.builder()
+                                .type(TransactionType.EXPENSE)
+                                .categoryId(budget.getCategory().getId())
+                                .startDate(budget.getMonth().atDay(1))
+                                .endDate(budget.getMonth().atEndOfMonth())
+                                .build();
+
+      BigDecimal spent = transactionService.filter(filter).stream()
+        .map(TransactionDTO::getAmount)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+      BigDecimal remaining = budgeted.subtract(spent);
+
+      CategoryDTO categoryDTO = CategoryDTO.builder()
+                                .id(budget.getCategory().getId())
+                                .name(budget.getCategory().getName())
+                                .type(budget.getCategory().getType())
+                                .build();
+
+      return BudgetSummaryDTO.builder()
+                            .id(budget.getId())
+                            .category(categoryDTO)
+                            .budgeted(budgeted)
+                            .spent(spent)
+                            .remaining(remaining)
+                            .build();
+    }).toList();
   }
 
   /**

@@ -72,6 +72,14 @@ public interface BudgetService {
     BudgetSummaryDTO getBudgetSummary(Long id);
 
     /**
+   * Generates budget summaries for all budgets in a given month.
+   * 
+   * @param month the year-month to filter budgets by
+   * @return a list of summary DTOs for each budget
+   */
+    List<BudgetSummaryDTO> getMonthlyBudgetSummaries(YearMonth month);
+
+    /**
      * Retrieves all budgets for a specific month.
      *
      * @param month the month to filter by
