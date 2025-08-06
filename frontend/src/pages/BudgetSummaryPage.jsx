@@ -16,7 +16,7 @@ function BudgetSummaryPage() {
     const fetchBudgets = async () => {
       setLoading(true);
       try {
-        const res = await api.get(`/budgets/month/${value}`, {
+        const res = await api.get(`/budgets/summary/${value}`, {
           headers: { Authorization: `Bearer ${token}`},
         });
         setBudgets(res.data);
@@ -45,9 +45,12 @@ function BudgetSummaryPage() {
         <p>No budgets found for this month.</p>
       ) : (
         <ul>
-          {budgets.map(({ id, category, value: amount }) => (
+          {budgets.map(({ id, category, budgeted, spent, remaining }) => (
             <li key={id}>
-              {category.name}: ${amount}
+              <strong>{category.name}</strong><br />
+              Budgeted: ${budgeted.toFixed(2)}<br />
+              Spent: ${spent.toFixed(2)}<br />
+              Remaining: ${remaining.toFixed(2)}
             </li>
           ))}
         </ul>
