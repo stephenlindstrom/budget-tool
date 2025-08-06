@@ -20,7 +20,8 @@ function LoginPage() {
 
     try {
       const response = await api.post("/auth/login", form);
-      login(response.data);
+      const actualToken = response.data.token;
+      login(actualToken);
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
