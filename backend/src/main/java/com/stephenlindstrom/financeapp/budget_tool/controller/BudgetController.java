@@ -1,5 +1,6 @@
 package com.stephenlindstrom.financeapp.budget_tool.controller;
 
+import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.stephenlindstrom.financeapp.budget_tool.converter.YearMonthConverter;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
@@ -27,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+
 
 /**
  * REST controller for budget-related endpoints.
@@ -209,4 +212,15 @@ public class BudgetController {
     budgetService.deleteById(id);
     return ResponseEntity.noContent().build();
   }
+
+  @GetMapping("/month/{month}")
+  public ResponseEntity<List<BudgetDTO>> getByMonth(
+    @Parameter(description = "Month of budgets to retrieve")
+    @PathVariable String month
+  ) {
+      YearMonthConverter converter = new YearMonthConverter();
+      YearMonth convertedMonth = converter.convertToEntityAttribute(month);
+      return ResponseEntity.ok(budgetService.getByMonth(convertedMonth));
+  }
+  
 }
