@@ -9,6 +9,12 @@ import lombok.Data;
 @Builder
 @Data
 public class BudgetSummaryDTO {
+  @Schema(description = "Unique ID of the budget", example = "1")
+  private Long id;
+
+  @Schema(description = "Category associated with the budget")
+  private CategoryDTO category;
+
   @Schema(description = "Amount budgeted", example = "500.00")
   private BigDecimal budgeted;
 
