@@ -45,7 +45,7 @@ function LoginPage() {
           />
         </div>
         <div style={{ marginTop: "1rem" }}>
-          <label>Password</label><br />
+          <label>Password:</label><br />
           <input
             type="password"
             name="password"
