@@ -1,29 +1,24 @@
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 
-function CreateBudgetPage() {
+import BudgetForm from "../components/budgets/BudgetForm";
+import CategoryModal from "../components/categories/CategoryModal";
+
+export default function CreateBudgetPage() {
   const { token, loading } = useAuth();
   const navigate = useNavigate();
 
-  const monthId = useId();
-  const valueId = useId();
-  const categoryId = useId();
-
-   const defaultMonth = new Date().toISOString().slice(0, 7);
+  const defaultMonth = new Date().toISOString().slice(0, 7);
   
-  const [form, setForm] = useState(() => ({
-    value: "",
-    month: defaultMonth,
-    categoryId: "",
-  }));
   const [categories, setCategories] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [catsError, setCatsError] = useState("");
   const [loadingCats, setLoadingCats] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  
+  const [isCatModalOpen, setCatModalOpen] = useState(false);
 
+  // Auth + categories fetch
   useEffect(() => {
     if (loading) return;
     if (!token) {
@@ -32,8 +27,9 @@ function CreateBudgetPage() {
     }
 
     let cancelled = false;
-    setLoadingCats(true);
-    (async () => {
+    async function loadCategories () {
+      setLoadingCats(true);
+      setCatsError("");
       try {
         const res = await api.get("/categories", {
           headers: { Authorization: `Bearer ${token}`},
@@ -42,120 +38,63 @@ function CreateBudgetPage() {
       } catch (err) {
         if (!cancelled) {
           console.error(err);
-          setError(err.response?.data?.message || "Error fetching categories");
+          setCatsError(err.response?.data?.message || "Error fetching categories");
         }
       } finally {
         if (!cancelled) setLoadingCats(false);
       }
-    })();
+    }
 
+    loadCategories();
     return () => { cancelled = true; };
   }, [loading, token, navigate]);
 
-  const handleChange = (e) => {
-    setError("");
-    setSuccess("");
-    const { name, value } = e.target;
-    setForm((f) => ({...f, [name] : value }));
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    const valueNum = parseFloat(form.value);
-    const categoryIdNum = parseInt(form.categoryId, 10);
-      
-    if (Number.isNaN(valueNum) || Number.isNaN(categoryIdNum)) {
-      setError("Please enter a valid amount and select a category");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const payload = { month: form.month, value: valueNum, categoryId: categoryIdNum };
-
-      await api.post("/budgets", payload, {
-        headers: { Authorization: `Bearer ${token}`},
-      });
-
-      setSuccess("Budget created")
-      setForm({ value: "", month: defaultMonth, categoryId: ""}); // Reset form
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Error creating budget");
-    } finally {
-      setSubmitting(false);
-    }
+  // Called by BudgetForm when user submits a new budget
+  const submitBudget = async (payload) => {
+    // payload = { month, value:number, categoryId:number }
+    return api.post("/budgets", payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
   };
 
-  const formInvalid = !form.value || !form.month || !form.categoryId;
+  // Called by CategoryModal to create a new category
+  const createCategory = async (name, type) => {
+    const res = await api.post(
+      "/categories",
+      { name, type },
+      { headers: { Authorization: `Bearer ${token}`}, }
+    );
+    const created = res.data; // { id, name, type }
+    // Update Local List so it appears in the dropdown immediately
+    setCategories((prev) => [created, ...prev]);
+    return created;
+  };
 
   return (
-    <div style={{ maxWidth: 600, margin: "2rem auto"}}>
+    <div style={{ maxWidth: 640, margin: "2rem auto" }}>
       <h2>Create Budget</h2>
 
-      {error && <p role="alert" aria-live="polite" style={{ color: "red"}}>{error}</p>}
-      {success && <p aria-live="polite" style={{ color: "green"}}>{success}</p>}
+      {/* Page-level fetch error (form-level errors are handled inside BudgetForm) */}
+      {catsError && (
+        <p role="alert" style={{ color: "red" }}>
+          <strong>Error:</strong> {catsError}
+        </p>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor={valueId}>Value: </label><br />
-          <input
-            id={valueId}
-            type="number"
-            name="value"
-            min="0"
-            step="0.01"
-            value={form.value}
-            onChange={handleChange}
-            required
-            inputMode="decimal"
-          />
-        </div>
+      <BudgetForm
+        categories={categories}
+        loadingCats={loadingCats}
+        defaultMonth={defaultMonth}
+        onSubmit={submitBudget}
+        onAddCategoryClick={() => setCatModalOpen(true)}
+      />
 
-        <div style={{ marginTop: "1rem"}}>
-          <label htmlFor={monthId}>Month:</label><br />
-          <input
-            id={monthId}
-            type="month"
-            name="month"
-            value={form.month}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div style={{ marginTop: "1rem"}}>
-          <label htmlFor={categoryId}>Category:</label><br />
-          <select
-            id={categoryId}
-            name="categoryId"
-            value={form.categoryId}
-            onChange={handleChange}
-            required
-            disabled={loadingCats}
-          >
-            <option value="">{loadingCats ? "Loading..." : "Select a category"}</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button 
-          type="submit" 
-          disabled={submitting || loadingCats || formInvalid} 
-          style={{ marginTop: "1.5rem"}}
-        >
-          {submitting ? "Submitting..." : "Submit"}
-        </button>
-      </form>
+      <CategoryModal
+        isOpen={isCatModalOpen}
+        onClose={() => setCatModalOpen(false)}
+        onCreate={createCategory}
+        categories={categories}
+      />
     </div>
   );
 }
-
-export default CreateBudgetPage;
