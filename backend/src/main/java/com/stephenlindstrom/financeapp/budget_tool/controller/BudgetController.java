@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.stephenlindstrom.financeapp.budget_tool.converter.YearMonthConverter;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
-import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -247,7 +247,7 @@ public class BudgetController {
 
   @Operation(
     summary = "Get budget summaries for given month",
-    description = "Returns a list of budget summaries for a given year-month combination."
+    description = "Returns the month metadata and a list of budget summaries for a given year-month combination."
   )
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Budget summaries found and returned"),
@@ -267,7 +267,7 @@ public class BudgetController {
     )
   })
   @GetMapping("/summary/{month}")
-  public ResponseEntity<List<BudgetSummaryDTO>> getMonthlySummaries(
+  public ResponseEntity<MonthlyBudgetSummaryDTO> getMonthlySummaries(
     @Parameter(description = "Month of summaries to retrieve in YYYY-MM format")
     @PathVariable String month
   ) {
@@ -275,5 +275,4 @@ public class BudgetController {
     return ResponseEntity.ok(budgetService.getMonthlyBudgetSummaries(ym));
   }
 
-  
 }

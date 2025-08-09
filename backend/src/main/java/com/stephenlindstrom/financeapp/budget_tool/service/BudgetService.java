@@ -8,6 +8,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
 
 /**
  * Service interface for managing budgets.
@@ -71,13 +72,13 @@ public interface BudgetService {
      */
     BudgetSummaryDTO getBudgetSummary(Long id);
 
-    /**
+   /**
    * Generates budget summaries for all budgets in a given month.
    * 
    * @param month the year-month to filter budgets by
-   * @return a list of summary DTOs for each budget
+   * @return a MonthlyBudgetSummaryDTO containing the month metadata and a list of summaries
    */
-    List<BudgetSummaryDTO> getMonthlyBudgetSummaries(YearMonth month);
+    MonthlyBudgetSummaryDTO getMonthlyBudgetSummaries(YearMonth month);
 
     /**
      * Retrieves all budgets for a specific month.

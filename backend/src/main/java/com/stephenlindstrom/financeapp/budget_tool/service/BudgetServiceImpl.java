@@ -15,6 +15,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
@@ -190,15 +191,16 @@ public class BudgetServiceImpl implements BudgetService {
    * Generates budget summaries for all budgets in a given month.
    * 
    * @param month the year-month to filter budgets by
-   * @return a list of summary DTOs for each budget
+   * @return a MonthlyBudgetSummaryDTO containing the month metadata and a list of summaries
    */
 
   @Override
-  public List<BudgetSummaryDTO> getMonthlyBudgetSummaries(YearMonth month) {
+  public MonthlyBudgetSummaryDTO getMonthlyBudgetSummaries(YearMonth month) {
     User user = userService.getAuthenticatedUser();
     List<Budget> budgets = budgetRepository.findByMonthAndUser(month, user);
+    MonthDTO monthDTO = mapToDTO(month);
 
-    return budgets.stream().map(budget -> {
+    List<BudgetSummaryDTO> budgetSummaries = budgets.stream().map(budget -> {
       BigDecimal budgeted = budget.getValue();
 
       TransactionFilter filter = TransactionFilter.builder()
@@ -221,13 +223,18 @@ public class BudgetServiceImpl implements BudgetService {
                                 .build();
 
       return BudgetSummaryDTO.builder()
-                            .id(budget.getId())
-                            .category(categoryDTO)
-                            .budgeted(budgeted)
-                            .spent(spent)
-                            .remaining(remaining)
-                            .build();
+                              .id(budget.getId())
+                              .category(categoryDTO)
+                              .budgeted(budgeted)
+                              .spent(spent)
+                              .remaining(remaining)
+                              .build();
     }).toList();
+
+    return MonthlyBudgetSummaryDTO.builder()
+                                  .budgetSummaryDTOs(budgetSummaries)
+                                  .monthDTO(monthDTO)
+                                  .build();
   }
 
   /**
