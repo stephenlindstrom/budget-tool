@@ -7,6 +7,8 @@ import { useAuth } from "./hooks/useAuth";
 import { useEffect } from "react";
 import { configureApi } from "./api/api";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import Navbar from "./components/Navbar";
+import ProtectedLayout from "./routes/ProtectedLayout";
 
 function App() {
   const { token, logout } = useAuth();
@@ -21,9 +23,11 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/budgets/:value" element={<ProtectedRoute><BudgetSummaryPage /></ProtectedRoute>} />
-      <Route path="/create_budget" element={<ProtectedRoute><CreateBudgetPage /></ProtectedRoute>} />
+      <Route element={<ProtectedLayout />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/budgets/:value" element={<BudgetSummaryPage />} />
+        <Route path="/create_budget" element={<CreateBudgetPage />} />
+      </Route>
     </Routes>
   );
 }
