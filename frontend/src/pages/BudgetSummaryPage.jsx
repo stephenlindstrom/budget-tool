@@ -10,11 +10,13 @@ function BudgetSummaryPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  const [budgets, setBudgets] = useState([]);
+  const [data, setData] = useState(null); // { monthDTO, budgetSummaryDTOs }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const month = useMemo(() => (/^\d{4}-\d{2}$/.test(value || "") ? value : null), [value]);
+
+  const monthLabel = data?.monthDTO?.display ?? month ?? value;
 
   useEffect(() => {
     if (!token) {
@@ -27,6 +29,7 @@ function BudgetSummaryPage() {
     }
 
     const controller = new AbortController();
+
     (async () => {
       setLoading(true);
       setError("");
@@ -35,7 +38,7 @@ function BudgetSummaryPage() {
           signal: controller.signal,
           headers: { Authorization: `Bearer ${token}`},
         });
-        setBudgets(Array.isArray(res.data) ? res.data : []);
+        setData(res.data ?? null);
       } catch (err) {
         if (controller.signal.aborted) return;
         console.error(err);
@@ -47,21 +50,26 @@ function BudgetSummaryPage() {
     })();
 
     return () => controller.abort();
-
   }, [token, month, navigate]);
 
+  const summaries = useMemo(
+    () => data?.budgetSummaryDTOs ?? [],
+    [data?.budgetSummaryDTOs]
+  );
+  
   const totals = useMemo(() => {
-    return budgets.reduce(
-      (acc, b) => {
-        const budgeted = Number(b.budgeted ?? 0);
-        const spent = Number(b.spent ?? 0);
+    return summaries.reduce(
+      (acc, s) => {
+        const budgeted = Number(s.budgeted ?? 0);
+        const spent = Number(s.spent ?? 0);
         acc.budgeted += budgeted;
         acc.spent += spent;
         return acc;
       },
       { budgeted: 0, spent: 0 }
     );
-  }, [budgets]);
+  }, [summaries]);
+
   const remainingTotal = totals.budgeted - totals.spent;
 
   return (
@@ -70,13 +78,17 @@ function BudgetSummaryPage() {
         Back to Dashboard
       </button>
 
-      <h2>Budgets for { month ?? value }</h2>
+      <h2>Budgets for {monthLabel}</h2>
 
-      {error && <p role="alert" style={{ color: "red"}}><strong>Error:</strong> {error}</p>}
+      {error && (
+        <p role="alert" style={{ color: "red"}}>
+          <strong>Error:</strong> {error}
+        </p>
+      )}
 
       {loading ? (
         <p aria-live="polite">Loading budgets...</p>
-      ) : budgets.length === 0 ? (
+      ) : summaries.length === 0 ? (
         <p>No budgets found for this month.</p>
       ) : (
         <>
@@ -92,16 +104,22 @@ function BudgetSummaryPage() {
 
           {/* List */}
           <dl>
-            {budgets
+            {summaries
               .slice()
-              .sort((a, b) => a?.category?.name?.localeCompare(b?.category?.name || "") || 0)
+              .sort(
+                (a, b) => a?.category?.name?.localeCompare(b?.category?.name || "") || 0)
               .map(({ id, category, budgeted, spent, remaining }) => {
                 const b = Number(budgeted ?? 0);
                 const s = Number(spent ?? 0);
                 const r = Number(remaining ?? b - s);
                 return (
-                  <div key={id} style={{ padding: "0.5rem 0", borderBottom: "1px solid #eee" }}>
-                    <dt><strong>{category?.name ?? "Uncategorized"}</strong></dt>
+                  <div 
+                    key={id} 
+                    style={{ padding: "0.5rem 0", borderBottom: "1px solid #eee" }}
+                  >
+                    <dt>
+                      <strong>{category?.name ?? "Uncategorized"}</strong>
+                    </dt>
                     <dd style={{ margin: 0 }}>
                       Budgeted: {fmtUSD.format(b)} Spent: {fmtUSD.format(s)}{" "}
                       <span style={{ color: r < 0 ? "crimson" : "inherit" }}>
