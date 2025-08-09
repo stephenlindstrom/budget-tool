@@ -6,8 +6,6 @@ import CreateBudgetPage from "./pages/CreateBudgetPage";
 import { useAuth } from "./hooks/useAuth";
 import { useEffect } from "react";
 import { configureApi } from "./api/api";
-import ProtectedRoute from "./routes/ProtectedRoute";
-import Navbar from "./components/Navbar";
 import ProtectedLayout from "./routes/ProtectedLayout";
 
 function App() {
