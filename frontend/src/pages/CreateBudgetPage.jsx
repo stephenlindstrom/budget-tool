@@ -26,27 +26,27 @@ export default function CreateBudgetPage() {
       return;
     }
 
-    let cancelled = false;
-    async function loadCategories () {
+    const controller = new AbortController();
+    (async () => {
       setLoadingCats(true);
       setCatsError("");
       try {
         const res = await api.get("/categories", {
+          signal: controller.signal,
           headers: { Authorization: `Bearer ${token}`},
         });
-        if (!cancelled) setCategories(res.data);
+        setCategories(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        if (!cancelled) {
-          console.error(err);
-          setCatsError(err.response?.data?.message || "Error fetching categories");
-        }
+        if (controller.signal.aborted) return;
+        console.error(err);
+        setCatsError(err.response?.data?.message || "Error fetching categories");
       } finally {
-        if (!cancelled) setLoadingCats(false);
+        if (!controller.signal.aborted) setLoadingCats(false);
       }
-    }
+    })();
 
-    loadCategories();
-    return () => { cancelled = true; };
+    return () => controller.abort();
+    
   }, [loading, token, navigate]);
 
   // Called by BudgetForm when user submits a new budget
