@@ -1,22 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
-import { useAuth } from "../hooks/useAuth";
 
 function DashboardPage() {
-  const { token } = useAuth();
   const [months, setMonths] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) return;
-
     const fetchMonths = async () => {
       try {
-        const res = await api.get("/budgets/months", {
-          headers: { Authorization: `Bearer ${token}`},
-        });
+        const res = await api.get("/budgets/months");
         setMonths(res.data);
       } catch (err) {
         setError("Failed to load available months.");
@@ -25,7 +19,7 @@ function DashboardPage() {
     };
 
     fetchMonths();
-  }, [token]);
+  }, []);
 
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto"}}>

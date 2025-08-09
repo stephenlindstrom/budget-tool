@@ -1,13 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
-import { useAuth } from "../hooks/useAuth";
 
 const fmtUSD = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
 
 function BudgetSummaryPage() {
   const { value } = useParams();
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   const [data, setData] = useState(null); // { monthDTO, budgetSummaryDTOs }
@@ -19,10 +17,6 @@ function BudgetSummaryPage() {
   const monthLabel = data?.monthDTO?.display ?? month ?? value;
 
   useEffect(() => {
-    if (!token) {
-      navigate("/");
-      return;
-    }
     if (!month) {
       setError("Invalid month format. Expected YYYY-MM.");
       return;
@@ -34,10 +28,7 @@ function BudgetSummaryPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await api.get(`/budgets/summary/${month}`, {
-          signal: controller.signal,
-          headers: { Authorization: `Bearer ${token}`},
-        });
+        const res = await api.get(`/budgets/summary/${month}`, { signal: controller.signal });
         setData(res.data ?? null);
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -50,7 +41,7 @@ function BudgetSummaryPage() {
     })();
 
     return () => controller.abort();
-  }, [token, month, navigate]);
+  }, [month, navigate]);
 
   const summaries = useMemo(
     () => data?.budgetSummaryDTOs ?? [],

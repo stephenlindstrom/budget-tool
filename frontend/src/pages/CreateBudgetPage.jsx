@@ -7,7 +7,7 @@ import BudgetForm from "../components/budgets/BudgetForm";
 import CategoryModal from "../components/categories/CategoryModal";
 
 export default function CreateBudgetPage() {
-  const { token, loading } = useAuth();
+  const { loading } = useAuth();
   const navigate = useNavigate();
 
   const defaultMonth = new Date().toISOString().slice(0, 7);
@@ -21,20 +21,13 @@ export default function CreateBudgetPage() {
   // Auth + categories fetch
   useEffect(() => {
     if (loading) return;
-    if (!token) {
-      navigate("/");
-      return;
-    }
 
     const controller = new AbortController();
     (async () => {
       setLoadingCats(true);
       setCatsError("");
       try {
-        const res = await api.get("/categories", {
-          signal: controller.signal,
-          headers: { Authorization: `Bearer ${token}`},
-        });
+        const res = await api.get("/categories", { signal: controller.signal });
         setCategories(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -46,24 +39,18 @@ export default function CreateBudgetPage() {
     })();
 
     return () => controller.abort();
-    
-  }, [loading, token, navigate]);
+
+  }, [loading, navigate]);
 
   // Called by BudgetForm when user submits a new budget
   const submitBudget = async (payload) => {
     // payload = { month, value:number, categoryId:number }
-    return api.post("/budgets", payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    return api.post("/budgets", payload);
   };
 
   // Called by CategoryModal to create a new category
   const createCategory = async (name, type) => {
-    const res = await api.post(
-      "/categories",
-      { name, type },
-      { headers: { Authorization: `Bearer ${token}`}, }
-    );
+    const res = await api.post("/categories", { name, type });
     const created = res.data; // { id, name, type }
     // Update Local List so it appears in the dropdown immediately
     setCategories((prev) => [created, ...prev]);
