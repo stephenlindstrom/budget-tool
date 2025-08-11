@@ -1,0 +1,11 @@
+*,*::before,*::after{ box-sizing:border-box; }
+html,body,#root{ height:100%; }
+body{
+  margin:0; font-family:var(--font-family); font-size:var(--font-size);
+  line-height:var(--line-height); color:var(--color-text); background:var(--color-bg);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+img,svg,video{ max-width:100%; display:block; }
+a{ color:var(--color-primary); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+:focus-visible{ outline:2px solid var(--color-primary); outline-offset:2px; }
