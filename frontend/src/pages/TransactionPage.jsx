@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import api from "../api/api";
-import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, Plus } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
+import AddTransactionModal from "../components/transactions/AddTransactionModal";
 
 function TransactionPage() {
   const { loading: authLoading } = useAuth();
@@ -117,6 +118,36 @@ function TransactionPage() {
     return () => transCtrlRef.current?.abort();
   }, [authLoading, fetchAll]);
 
+  // ---- Add Transaction Modal ----
+  const [openAdd, setOpenAdd] = useState(false);
+
+  const normalizeCreated = useCallback(
+    (tx) => {
+      if (!tx) return tx;
+      if (!tx.category && tx.categoryId != null) {
+        const cat = categories.find(
+          (c) => String(c.id) === String(tx.categoryId)
+        );
+        return {...tx, category: cat || null };
+      }
+      return tx;
+    },
+    [categories]
+  );
+
+  const matchesFilter = useCallback(
+    (tx) => {
+      if (!tx) return false;
+      if (filter.type && tx.type !== filter.type) return false;
+      if (filter.categoryId && String(tx.category?.id ?? tx.categoryId) !== String(filter.categoryId))
+        return false;
+      if (filter.startDate && (tx.date ?? "") < filter.startDate) return false;
+      if (filter.endDate && (tx.date ?? "") > filter.endDate) return false;
+      return true;
+    },
+    [filter]
+  );
+
   const rows = useMemo(() => {
     const mult = sort.dir === "asc" ? 1 : -1;
     const cmp = (a, b) => {
@@ -157,20 +188,44 @@ function TransactionPage() {
         ? { key: col.id, dir: s.dir === "asc" ? "desc" : "asc" }
         : { key: col.id, dir: col.defaultDir ?? "asc" }
     );
-  
+
+  const anyFilterActive = filter.type || filter.categoryId || filter.startDate || filter.endDate;
+
+  const visibleCategories = useMemo(
+    () => (!filter.type ? categories : categories.filter(c => c.type === filter.type)),
+    [categories, filter.type]
+  );
+
+  useEffect(() => {
+    if (!filter.categoryId) return;
+    const stillValid = visibleCategories.some(c => String(c.id) === String(filter.categoryId));
+    if (!stillValid) {
+      setFilter(f => ({...f, categoryId: "" }));
+    }
+  }, [visibleCategories, filter.categoryId]);
+
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-16 mb-24">
-      <h2 className="text-2xl font-semibold tracking-tight text-slate-900 mb-4">
-        Transactions
-      </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Transactions
+        </h2>
+        <button
+          type="button"
+          onClick={() => setOpenAdd(true)}
+          className="inline-flex h-9 items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+        >
+          <Plus size={16} />
+          Add transaction
+        </button>
+      </div>
 
       {/* Filter Form */}
       <form
         className="grid gap-3 md:grid-cols-5 items-end mb-6"
         onSubmit={(e) => {
           e.preventDefault();
-          const any = filter.type || filter.categoryId || filter.startDate || filter.endDate;
-          any ? fetchFiltered() : fetchAll();
+          anyFilterActive ? fetchFiltered() : fetchAll();
         }}
       >
         {/* Type */}
@@ -202,7 +257,7 @@ function TransactionPage() {
               ${catsError ? "border-red-500 focus:ring-red-500/20" : "border-slate-300 focus:border-blue-600 focus:ring-blue-600/20"}`}
           >
             <option value="">All</option>
-            {categories.map((c) => (
+            {visibleCategories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -323,7 +378,7 @@ function TransactionPage() {
                     </p>
                     <button
                       className="inline-flex h-8 items-center justify-center rounded-md bg-blue-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-                      onClick={fetchAll}
+                      onClick={anyFilterActive ? fetchFiltered : fetchAll}
                       disabled={loadingTrans}
                     >
                       Retry
@@ -367,6 +422,21 @@ function TransactionPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        open={openAdd}
+        onClose={() => setOpenAdd(false)}
+        onCreated={(tx) => {
+          const created = normalizeCreated(tx);
+          if (!anyFilterActive || matchesFilter(created)) {
+            setTransactions((list) => [created, ...list]);
+          } else {
+            // New tx doesn’t match active filters—refresh filtered view
+            fetchFiltered();
+          }
+        }}
+      />
     </div>
   );
 }
