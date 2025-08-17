@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import api from "../api/api";
-import { ChevronUp, ChevronDown, ChevronsUpDown, ScrollText } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
 
 function TransactionPage() {
@@ -102,7 +102,7 @@ function TransactionPage() {
       if (controller.signal.aborted) return;
       console.error("Filter /transactions failed:", err?.response?.status, err);
       const msg =
-        err?.response?.date?.message ||
+        err?.response?.data?.message ||
         (err?.code === "ERR_NETWORK"
           ? "Network error. Check your connection."
           : "Error filtering transactions");
@@ -149,26 +149,6 @@ function TransactionPage() {
   const amountAlign = columns.find(c => c.id === "amount")?.align === "right" ? "text-right" : "";
 
   const view = transError ? "error" : loadingTrans ? "loading" : transactions.length === 0 ? "empty" : "data";
-  const views = {
-    error: <tr>
-            <td colSpan={colCount}>
-              <div className="alert alert--error flex items-center justify-between" role="alert">
-                <p className="m-0"><strong>Error:</strong> {transError}</p>
-                <button className="btn btn--primary" onClick={fetchAll} disabled={loadingTrans}>Retry</button>
-              </div>
-            </td>
-          </tr>,
-    loading: <tr><td colSpan={colCount}>Loading transactions...</td></tr>,
-    empty: <tr><td colSpan={colCount}>No transactions found.</td></tr>,
-    data: rows.map(({ id, amount, date, description, category }) => (
-            <tr key={id}>
-              <td>{dateFormatter.format(new Date(date + "T00:00:00"))}</td>
-              <td>{description}</td>
-              <td>{category?.name ?? "-"}</td>
-              <td className={amountAlign}>{currencyFormatter.format(amount ?? 0)}</td>
-            </tr>  
-          )),
-  };
 
   const ariaSortFor = (id) =>
     sort.key === id ? (sort.dir === "asc" ? "ascending" : "descending") : "none";
@@ -181,25 +161,29 @@ function TransactionPage() {
     );
   
   return (
-    <div className="container mt-16 mb-24">
-      <h2>Transactions</h2>
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mt-16 mb-24">
+      <h2 className="text-2xl font-semibold tracking-tight text-slate-900 mb-4">
+        Transactions
+      </h2>
 
       {/* Filter Form */}
       <form
-        className="mb-4 grid gap-2 md:grid-cols-5"
+        className="grid gap-3 md:grid-cols-5 items-end mb-6"
         onSubmit={(e) => {
           e.preventDefault();
-          const anyFilter = filter.type || filter.categoryId || filter.startDate || filter.endDate;
-          anyFilter ? fetchFiltered() : fetchAll();
+          const any = filter.type || filter.categoryId || filter.startDate || filter.endDate;
+          any ? fetchFiltered() : fetchAll();
         }}
       >
+        {/* Type */}
         <label className="flex flex-col">
-          <span className="mb-1">Type</span>
+          <span className="mb-1 text-sm font-medium text-slate-700">Type</span>
           <select
             name="type"
             value={filter.type}
             onChange={onFilterChange}
             disabled={loadingTrans}
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
           >
             <option value="">All</option>
             <option value="EXPENSE">Expense</option>
@@ -207,14 +191,17 @@ function TransactionPage() {
           </select>
         </label>
 
+        {/* Category */}
         <label className="flex flex-col">
-          <span className="mb-1">Category</span>
+          <span className="mb-1 text-sm font-medium text-slate-700">Category</span>
           <select
             name="categoryId"
             value={filter.categoryId}
             onChange={onFilterChange}
             disabled={loadingCats || !!catsError || loadingTrans}
             aria-invalid={!!catsError}
+            className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500
+              ${catsError ? "border-red-500 focus:ring-red-500/20" : "border-slate-300 focus:border-blue-600 focus:ring-blue-600/20"}`}
           >
             <option value="">All</option>
             {categories.map((c) => (
@@ -226,27 +213,30 @@ function TransactionPage() {
           {catsError && (
             <button
               type="button"
-              className="btn btn--link mt-1 p-0"
               onClick={refreshCats}
+              className="mt-1 inline-flex text-sm text-blue-600 hover:underline"
             >
               Retry categories
             </button>
           )}
         </label>
 
+        {/* Start */}
         <label className="flex flex-col">
-          <span className="mb-1">Start</span>
+          <span className="mb-1 text-sm font-medium text-slate-700">Start</span>
           <input
             type="date"
             name="startDate"
             value={filter.startDate}
             onChange={onFilterChange}
             disabled={loadingTrans}
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
           />
         </label>
 
+        {/* End */}
         <label className="flex flex-col">
-          <span className="mb-1">End</span>
+          <span className="mb-1 text-sm font-medium text-slate-700">End</span>
           <input
             type="date"
             name="endDate"
@@ -254,65 +244,133 @@ function TransactionPage() {
             onChange={onFilterChange}
             min={filter.startDate || undefined}
             disabled={loadingTrans}
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
           />
         </label>
 
+        {/* Buttons */}
         <div className="flex items-end gap-2">
-          <button type="submit" className="btn btn--primary" disabled={loadingTrans}>
+          <button
+            type="submit"
+            disabled={loadingTrans}
+            className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+          >
             Apply
           </button>
           <button
             type="button"
-            className="btn"
             disabled={loadingTrans}
             onClick={() => {
               clearFilter();
               fetchAll();
             }}
+            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60"
           >
             Clear
           </button>
         </div>
       </form>
-      <table className="table">
-        <caption className="sr-only">List of transactions</caption>
-        <thead>
-          <tr>
-            {columns.map((c) => {
-              const isActive = sort.key === c.id;
-              const caret = isActive ? (sort.dir === "asc" ? <ChevronUp /> : <ChevronDown />) : <ChevronsUpDown />;
-              return (
-                <th 
-                  key={c.id} 
-                  scope="col"
-                  aria-sort={ariaSortFor(c.id)}
-                  className={`${c.align === "right" ? "text-right" : ""} ${isActive ? "th--active" : ""}`} 
-                >
-                  {c.sortable ? (
-                    <button
-                      type="button"
-                      className="sort-btn"
-                      onClick={() => onSortClick(c)}
-                      aria-label={`Sort by ${c.header} ${isActive ? (sort.dir === "asc" ? "descending" : "ascending") : (c.defaultDir ?? "ascending")}`}
-                    >
-                      <span>{c.header}</span>
-                      <span className="sort-indicator" aria-hidden="true">{caret}</span>
-                    </button>
-                  ) : (
-                    c.header
-                  )}
-              </th>
-              );
-            })}
-          </tr>
-        </thead>
 
-        <tbody aria-busy={loadingTrans}>
-          {views[view]}
-        </tbody>
-      </table>
+      {/* Table */}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="min-w-full text-left">
+          <caption className="sr-only">List of transactions</caption>
+          <thead className="bg-slate-50 text-slate-700">
+            <tr>
+              {columns.map((c) => {
+                const isActive = sort.key === c.id;
+                const caret = isActive ? (sort.dir === "asc" ? <ChevronUp /> : <ChevronDown />) : <ChevronsUpDown />;
+                return (
+                  <th
+                    key={c.id}
+                    scope="col"
+                    aria-sort={ariaSortFor(c.id)}
+                    className={`px-4 py-3 text-sm font-semibold ${c.align === "right" ? "text-right" : ""}`}
+                  >
+                    {c.sortable ? (
+                      <button
+                        type="button"
+                        onClick={() => onSortClick(c)}
+                        aria-label={`Sort by ${c.header} ${
+                          isActive ? (sort.dir === "asc" ? "descending" : "ascending") : c.defaultDir ?? "ascending"
+                        }`}
+                        className={`group inline-flex items-center gap-1 ${
+                          isActive ? "text-blue-700" : "text-slate-700"
+                        }`}
+                      >
+                        <span>{c.header}</span>
+                        <span className="inline-flex" aria-hidden="true">
+                          {caret}
+                        </span>
+                      </button>
+                    ) : (
+                      c.header
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-slate-200" aria-busy={loadingTrans}>
+            {view === "error" && (
+              <tr>
+                <td colSpan={colCount} className="px-4 py-6">
+                  <div
+                    role="alert"
+                    className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                  >
+                    <p className="m-0">
+                      <strong className="font-semibold">Error:</strong> {transError}
+                    </p>
+                    <button
+                      className="inline-flex h-8 items-center justify-center rounded-md bg-blue-600 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                      onClick={fetchAll}
+                      disabled={loadingTrans}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {view === "loading" && (
+              <tr>
+                <td colSpan={colCount} className="px-4 py-6 text-sm text-slate-600">
+                  Loading transactions...
+                </td>
+              </tr>
+            )}
+
+            {view === "empty" && (
+              <tr>
+                <td colSpan={colCount} className="px-4 py-6 text-sm text-slate-600">
+                  No transactions found.
+                </td>
+              </tr>
+            )}
+
+            {view === "data" &&
+              rows.map(({ id, amount, date, description, categoryId, category }) => (
+                <tr key={id} className="hover:bg-slate-50/60">
+                  <td className="px-4 py-3 text-sm text-slate-900">
+                    {dateFormatter.format(new Date(date + "T00:00:00"))}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-900">{description}</td>
+                  <td className="px-4 py-3 text-sm text-slate-900">
+                    {byId.get(String(categoryId))?.name ?? category?.name ?? "—"}
+                  </td>
+                  <td className={`px-4 py-3 text-sm text-slate-900 ${amountAlign}`}>
+                    {currencyFormatter.format(amount ?? 0)}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  )
+  );
 }
 
 export default TransactionPage;
