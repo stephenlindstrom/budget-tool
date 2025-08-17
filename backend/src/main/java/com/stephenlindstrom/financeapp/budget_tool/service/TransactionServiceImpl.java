@@ -10,6 +10,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
+import com.stephenlindstrom.financeapp.budget_tool.errors.CategoryTypeMismatchException;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.model.Transaction;
@@ -178,6 +179,12 @@ public class TransactionServiceImpl implements TransactionService {
   private Transaction mapToEntity(TransactionCreateDTO dto, User user) {
     Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+    if (category.getType() != dto.getType()) {
+      throw new CategoryTypeMismatchException(
+        "Category '%s' is %s and cannot be used for %s transactions".formatted(category.getName(), category.getType(), dto.getType())
+      );
+    }
 
     return Transaction.builder()
             .amount(dto.getAmount())

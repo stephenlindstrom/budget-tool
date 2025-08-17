@@ -39,4 +39,9 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(new ErrorResponse("Invalid date format. Expected YYYY-MM"));
   }
 
+  @ExceptionHandler(CategoryTypeMismatchException.class)
+  public ResponseEntity<ErrorResponse> handleCategoryTypeMismatchException(CategoryTypeMismatchException ex) {
+    return ResponseEntity.unprocessableEntity().body(new ErrorResponse(ex.getMessage()));
+  }
+
 }
