@@ -10,7 +10,6 @@ function TransactionPage() {
   // ---- Categories (from context) ----
   const {
     categories,
-    byId,
     loading: loadingCats,
     error: catsError,
     refresh: refreshCats
@@ -122,21 +121,20 @@ function TransactionPage() {
     const mult = sort.dir === "asc" ? 1 : -1;
     const cmp = (a, b) => {
       const val = sort.key === "date"
-        ? Date.parse(`${a.date}T00:00:00`) - Date.parse(`${b.date}T00:00:00`)
+        ? Date.parse(`${a?.date ?? ""}T00:00:00`) - Date.parse(`${b?.date ?? ""}T00:00:00`)
         : sort.key === "amount"
-        ? (Number(a.amount)||0) - (Number(b.amount)||0)
+        ? (Number(a?.amount)||0) - (Number(b?.amount)||0)
         : sort.key === "category"
-        ? (byId.get(String(a.categoryId))?.name || "").localeCompare(
-          byId.get(String(b.categoryId))?.name || "",
+        ? (a?.category?.name ?? "").localeCompare(b?.category?.name ?? "",
           undefined,
           { sensitivity: "base" }
         )
-        : (a.description||"").localeCompare(b.description||"", undefined, { sensitivity: "base" });
+        : (a?.description ?? "").localeCompare(b?.description ?? "", undefined, { sensitivity: "base" });
       
       return val * mult;
     };
     return [...transactions].sort(cmp);
-  }, [transactions, sort, byId]);
+  }, [transactions, sort]);
 
   const columns = [
     { id: "date", header: "Date", sortable: true, defaultDir: "desc" },
@@ -352,17 +350,17 @@ function TransactionPage() {
             )}
 
             {view === "data" &&
-              rows.map(({ id, amount, date, description, categoryId, category }) => (
+              rows.map(({ id, amount, date, description, category }) => (
                 <tr key={id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3 text-sm text-slate-900">
-                    {dateFormatter.format(new Date(date + "T00:00:00"))}
+                    {dateFormatter.format(new Date((date ?? "") + "T00:00:00"))}
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-900">{description}</td>
+                  <td className="px-4 py-3 text-sm text-slate-900">{description ?? "-"}</td>
                   <td className="px-4 py-3 text-sm text-slate-900">
-                    {byId.get(String(categoryId))?.name ?? category?.name ?? "—"}
+                    {category?.name ?? "—"}
                   </td>
                   <td className={`px-4 py-3 text-sm text-slate-900 ${amountAlign}`}>
-                    {currencyFormatter.format(amount ?? 0)}
+                    {currencyFormatter.format(Number(amount ?? 0))}
                   </td>
                 </tr>
               ))}
