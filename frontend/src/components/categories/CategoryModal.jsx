@@ -3,13 +3,14 @@ import PropTypes from "prop-types";
 
 /**
  * Accessible modal to create a new category.
- * 
+ *
  * Props:
  * - isOpen: boolean
  * - onClose: () => void
  * - onCreate: async (name: string, type: "INCOME"|"EXPENSE") => Promise<{ id: number|string, name: string, type: string }>
- * - categories: [{ id, name, type }] // used for client-side duplicate check 
+ * - categories: [{ id, name, type }] // used for client-side duplicate check
  * - initialName: string
+ * - initialType: "INCOME" | "EXPENSE" | ""
  */
 export default function CategoryModal({
   isOpen,
@@ -28,7 +29,7 @@ export default function CategoryModal({
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Reset field each time modal opens
+  // Reset fields when opening
   useEffect(() => {
     if (isOpen) {
       setName(initialName);
@@ -37,20 +38,18 @@ export default function CategoryModal({
     }
   }, [isOpen, initialName, initialType]);
 
-  // Basic focus management + return focus on close
+  // Basic focus mgmt + return focus on close
   useEffect(() => {
     if (!isOpen) return;
     lastFocusedRef.current = document.activeElement;
-    // Delay focus to ensure element is mounted
     const id = setTimeout(() => inputRef.current?.focus(), 0);
     return () => {
       clearTimeout(id);
-      // Return focus to the element that opened the modal
       lastFocusedRef.current?.focus?.();
     };
   }, [isOpen]);
 
-  // Very lightweight focus trap for Tab / Shift+Tab
+  // Lightweight focus trap + Esc handling
   useEffect(() => {
     if (!isOpen) return;
 
@@ -60,7 +59,6 @@ export default function CategoryModal({
         if (!creating) onClose();
         return;
       }
-
       if (e.key !== "Tab") return;
 
       const focusable = dialogRef.current?.querySelectorAll(
@@ -88,7 +86,7 @@ export default function CategoryModal({
     return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [isOpen, creating, onClose]);
 
-  // Backdrop click closes (but clicks inside dialog do not)
+  // Backdrop click closes (but not clicks inside dialog)
   const onBackdropClick = (e) => {
     if (e.target === e.currentTarget && !creating) onClose();
   };
@@ -99,8 +97,9 @@ export default function CategoryModal({
     if (trimmed.length > 50) return "Name must be 50 characters or less.";
     if (!type) return "Please select a type.";
     const dupe = categories.some(
-      (c) => c.name?.trim().toLowerCase() === trimmed.toLowerCase() &&
-      (c.type || "").toLowerCase() === type.toLowerCase()
+      (c) =>
+        c.name?.trim().toLowerCase() === trimmed.toLowerCase() &&
+        (c.type || "").toLowerCase() === type.toLowerCase()
     );
     if (dupe) return "That category already exists for this type.";
     return "";
@@ -122,8 +121,6 @@ export default function CategoryModal({
       setCreating(true);
       setError("");
       await onCreate(name.trim(), type);
-      // let parent update categories and select it
-      // Parent can close the modal immediately on success
       onClose();
     } catch (err) {
       const msg =
@@ -141,14 +138,7 @@ export default function CategoryModal({
   return (
     <div
       onClick={onBackdropClick}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.4)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 1000,
-      }}
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40"
     >
       <div
         ref={dialogRef}
@@ -156,66 +146,81 @@ export default function CategoryModal({
         aria-modal="true"
         aria-labelledby="new-cat-title"
         aria-describedby="new-cat-desc"
-        style={{
-          maxWidth: 400,
-          width: "calc(100% - 2rem)",
-          background: "white",
-          borderRadius: 12,
-          padding: 16,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-        }}
         onClick={(e) => e.stopPropagation()}
+        className="w-[calc(100%-2rem)] max-w-sm rounded-xl bg-white p-5 shadow-lg"
       >
-        <h3 id="new-cat-title" style={{ marginTop: 0 }}>
+        <h3 id="new-cat-title" className="mb-1 text-lg font-semibold text-slate-900">
           Create Category
         </h3>
-        <p id="new-cat-desc" style={{ marginTop: 0, color: "#555" }}>
-          Add a new category for your budget.
+        <p id="new-cat-desc" className="mb-3 text-sm text-slate-600">
+          Add a new category.
         </p>
 
         {error && (
-          <p role="alert" style={{ color: "red" }}>
-            <strong>Error:</strong> {error}
+          <p
+            role="alert"
+            className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            <strong className="font-semibold">Error:</strong> {error}
           </p>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="new-cat-name">Name</label>
-          <br />
-          <input
-            id="new-cat-name"
-            ref={inputRef}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={creating}
-            maxLength={60}
-            style={{ width: "100%", marginTop: 4 }}
-            required
-          />
+        <form onSubmit={handleSubmit} className="grid gap-3">
+          <div>
+            <label
+              htmlFor="new-cat-name"
+              className="mb-1 block text-sm font-medium text-slate-800"
+            >
+              Name
+            </label>
+            <input
+              id="new-cat-name"
+              ref={inputRef}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={creating}
+              maxLength={60}
+              required
+              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
+            />
+            <p className="mt-1 text-xs text-slate-500">Max 50 characters.</p>
+          </div>
 
           <div>
-            <label htmlFor="new-cat-type">Type</label>
-            <br />
+            <label
+              htmlFor="new-cat-type"
+              className="mb-1 block text-sm font-medium text-slate-800"
+            >
+              Type
+            </label>
             <select
               id="new-cat-type"
               value={type}
               onChange={(e) => setType(e.target.value)}
               required
               disabled={creating}
-              style={{ width: "100%", marginTop: 4 }}
+              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
             >
               <option value="">Select a type</option>
               <option value="INCOME">Income</option>
               <option value="EXPENSE">Expense</option>
             </select>
           </div>
-          
 
-          <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" onClick={onClose} disabled={creating}>
+          <div className="mt-1 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={creating}
+              className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={creating || !name.trim() || !type}>
+            <button
+              type="submit"
+              disabled={creating || !name.trim() || !type}
+              className="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            >
               {creating ? "Creating..." : "Create"}
             </button>
           </div>
@@ -236,6 +241,6 @@ CategoryModal.propTypes = {
       type: PropTypes.string,
     })
   ),
-  initialName:PropTypes.string,
-  initialType:PropTypes.string,
+  initialName: PropTypes.string,
+  initialType: PropTypes.string,
 };
