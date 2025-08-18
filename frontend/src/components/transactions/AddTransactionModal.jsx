@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useCategories } from "../../hooks/useCategories";
 import api from "../../api/api";
-import { Filter } from "lucide-react";
+import CategoryModal from "../categories/CategoryModal";
 
 function AddTransactionModal({ open, onClose, onCreated }) {
   const { categories, loading: loadingCats, error: catsError, refresh: refreshCats } = useCategories();
+
+  const [showCatModal, setShowCatModal] = useState(false);
+
   const [form, setForm] = useState({ 
     date: "", 
     description: "", 
@@ -16,6 +19,7 @@ function AddTransactionModal({ open, onClose, onCreated }) {
   const [error, setError] = useState("");
 
   const firstFieldRef = useRef(null);
+
   useEffect(() => {
     if (open) {
       setTimeout(() => firstFieldRef.current?.focus(), 0);
@@ -24,13 +28,15 @@ function AddTransactionModal({ open, onClose, onCreated }) {
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => {
+      if (e.key === "Escape" && !showCatModal) onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, showCatModal]);
 
   const visibleCategories = useMemo(
-    () => (!Filter.type ? categories : categories.filter(c => c.type === form.type)),
+    () => (!form.type ? categories : categories.filter((c) => c.type === form.type)),
     [categories, form.type]
   ); 
 
@@ -43,6 +49,21 @@ function AddTransactionModal({ open, onClose, onCreated }) {
   }, [visibleCategories, form.categoryId]);
 
   const onChange = (e) => setForm(f => ({...f, [e.target.name]: e.target.value }));
+
+  const handleCreateCategory = async (name, type) => {
+    const res = await api.post("/categories", {name: name.trim(), type });
+    const created = res.data
+    await refreshCats();
+   
+    setForm((f) => {
+      const next = { ...f };
+      if (created?.type !== f.type) next.type = created.type;
+      next.categoryId = String(created.id);
+      return next;
+    });
+
+    return created;
+  };
 
   const amountNum = Number(form.amount);
   const amountInvalid = !Number.isFinite(amountNum) || amountNum < 0;
@@ -108,6 +129,7 @@ function AddTransactionModal({ open, onClose, onCreated }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onMouseDown={(e) => {
         // click outside to close (ignore clicks inside the dialog)
+        if (showCatModal) return;
         if (e.target === e.currentTarget) onClose();
       }}
     >
@@ -144,7 +166,6 @@ function AddTransactionModal({ open, onClose, onCreated }) {
             name="date"
             value={form.date}
             onChange={onChange}
-            // no required — backend defaults to today
           />
 
           {/* description (optional) */}
@@ -154,7 +175,6 @@ function AddTransactionModal({ open, onClose, onCreated }) {
             placeholder="Description (optional)"
             value={form.description}
             onChange={onChange}
-            // no required — backend allows null/blank
           />
 
           {/* amount (required) */}
@@ -187,26 +207,39 @@ function AddTransactionModal({ open, onClose, onCreated }) {
             <option value="INCOME">Income</option>
           </select>
 
-          {/* categoryId (required) */}
-          <select
-            className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500 ${
-              catsError ? "border-red-500 focus:ring-red-500/20" : "border-slate-300 focus:border-blue-600 focus:ring-blue-600/20"
-            }`}
-            name="categoryId"
-            value={form.categoryId}
-            onChange={onChange}
-            disabled={loadingCats || visibleCategories.length === 0}
-            required
-          >
-            <option value="">
-              {visibleCategories.length === 0 ? "No categories for this type" : "Select category"}
-            </option>
-            {visibleCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+          {/* categoryId (required) + New Category */}
+          <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+            <select
+              className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500 ${
+                catsError 
+                  ? "border-red-500 focus:ring-red-500/20" 
+                  : "border-slate-300 focus:border-blue-600 focus:ring-blue-600/20"
+              }`}
+              name="categoryId"
+              value={form.categoryId}
+              onChange={onChange}
+              disabled={loadingCats || visibleCategories.length === 0}
+              required
+            >
+              <option value="">
+                {visibleCategories.length === 0 ? "No categories for this type" : "Select category"}
               </option>
-            ))}
-          </select>
+              {visibleCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setShowCatModal(true)}
+              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+              aria-label="Create new category"
+            >
+              + New
+            </button>
+          </div>
 
           <div className="mt-2 flex justify-end gap-2">
             <button
@@ -226,6 +259,20 @@ function AddTransactionModal({ open, onClose, onCreated }) {
           </div>
         </form>
       </div>
+
+      {/* Child modal */}
+      <CategoryModal
+        isOpen={showCatModal}
+        onClose={() => setShowCatModal(false)}
+        onCreate={async (name, type) => {
+          const created = await handleCreateCategory(name, type);
+          setShowCatModal(false);
+          return created;
+        }}
+        categories={categories}
+        initialName=""
+        initialType={form.type}
+      />
     </div>
   );
 }
