@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../hooks/useAuth";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 function LoginPage() {
   const { login } = useAuth();
@@ -12,12 +13,15 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
+  const canSubmit = form.username.trim().length > 0 && form.password && !submitting;
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canSubmit) return;
     setError("");
     setSubmitting(true);
 
@@ -67,6 +71,7 @@ function LoginPage() {
               name="username"
               value={form.username}
               onChange={handleChange}
+              placeholder="Enter username"
               required
               autoComplete="username"
               className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
@@ -87,40 +92,49 @@ function LoginPage() {
                 name="password"
                 value={form.password}
                 onChange={handleChange}
+                placeholder="Enter password"
                 required
                 autoComplete="current-password"
-                className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 pr-20 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
+                className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 pr-12 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
               />
               <button
                 type="button"
                 onClick={() => setShowPwd((v) => !v)}
-                className="absolute inset-y-0 right-0 m-1 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100"
+                className="absolute inset-y-0 right-0 flex items-center justify-center px-3 text-slate-600 hover:text-slate-900 focus:outline-none cursor-pointer"
                 aria-pressed={showPwd}
                 aria-label={showPwd ? "Hide password" : "Show password"}
               >
-                {showPwd ? "Hide" : "Show"}
+                {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </div>
 
           <button
             type="submit"
-            disabled={submitting}
-            className="mt-2 h-10 w-full rounded-md bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            disabled={!canSubmit}
+            className="mt-2 h-10 w-full rounded-md bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
-            {submitting ? "Logging in..." : "Login"}
+            {submitting ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4A4 4 0 004 12z" />
+                </svg>
+                Logging in...
+              </span>
+            ) : (
+              "Submit"
+            )}
           </button>
         </form>
 
-        {/* Register link */}
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => navigate('/register')}
-            className="text-sm font-medium text-blue-700 hover:underline"
-          >
-            Create an account
-          </button>
-        </div>
+        <p className="mt-1 text-sm text-slate-600 text-center">
+          Don’t have an account?{" "}
+          <Link to="/register" className="font-medium text-blue-600 hover:text-blue-700">
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );
