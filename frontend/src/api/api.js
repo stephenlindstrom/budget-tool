@@ -9,7 +9,7 @@ let onUnauthorized = null;
 
 /**
  * Configure how the API gets tokens and handles 401s.
- * Call this once at app start (or when token changes).
+ * Call this once at app start.
  */
 
 export function configureApi({ getToken: _getToken, onUnauthorized: _onUnauthorized } = {}) {
@@ -32,18 +32,25 @@ api.interceptors.request.use(
       }
     }
 
-    return { ...config, headers };
+    config.headers = headers;
+    return config;
   },
   (error) => Promise.reject(error)
 );
 
 // Response interceptor: handle 401s centrally
+let unauthorizedFired = false;
 api.interceptors.response.use(
   (res) => res,
   (error) => {
     const status = error?.response?.status;
-    if (status === 401 && typeof onUnauthorized === "function") {
-      try { onUnauthorized(error); } catch { /* noop */ }
+    if ((status === 401 || status === 403) && typeof onUnauthorized === "function") {
+      if (!unauthorizedFired) {
+        unauthorizedFired = true;
+        try { onUnauthorized(error); } catch { /* noop */ }
+        setTimeout(() => { unauthorizedFired = false; }, 0);
+      }
+      
     }
     return Promise.reject(error);
   }
