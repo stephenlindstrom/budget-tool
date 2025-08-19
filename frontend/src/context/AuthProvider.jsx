@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
       onUnauthorized: () => {
         localStorage.removeItem("budget-app-token");
         setToken(null);
-        navigate("/?reason=expired");
+        navigate("/login?reason=expired");
       },
     });
   }, [navigate]);

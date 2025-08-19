@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { configureApi } from "./api/api";
 import ProtectedLayout from "./routes/ProtectedLayout";
 import TransactionPage from "./pages/TransactionPage";
+import RegistrationPage from "./pages/RegistrationPage";
 
 function App() {
   const { token, logout } = useAuth();
@@ -21,7 +22,8 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegistrationPage />} />
       <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/budgets/:value" element={<BudgetSummaryPage />} />
