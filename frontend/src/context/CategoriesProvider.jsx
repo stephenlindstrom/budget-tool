@@ -10,15 +10,23 @@ export function CategoriesProvider({ children, staleMs = 5 * 60_000 }) {
   const [ error, setError ] = useState("");
   const [ lastLoadedAt, setLastLoadedAt ] = useState(0);
 
+  const lastLoadedAtRef = useRef(0);
+  const categoriesCountRef = useRef(0);
+
   // keep a single in-flight request
   const ctrlRef = useRef(null);
   const inFlightRef = useRef(false);
   const mountedRef = useRef(false);
+  const prevTokenRef = useRef(null);
 
   const fetchOnce = useCallback(
     async ({ force = false } = {}) => {
       if (inFlightRef.current) return;
-      if (!force && Date.now() - lastLoadedAt < staleMs && categories.length) return;
+      
+      const now = Date.now();
+      const fresh = now - lastLoadedAtRef.current < staleMs;
+      const hasData = categoriesCountRef.current > 0;
+      if (!force && fresh && hasData) return;
 
       ctrlRef.current?.abort();
       const controller = new AbortController();
@@ -29,23 +37,35 @@ export function CategoriesProvider({ children, staleMs = 5 * 60_000 }) {
       setError("");
 
       try {
-        const res = await api.get("/categories", { signal: controller.signal });
+        const res = await api.get("/categories", controller ? { signal: controller.signal } : undefined);
         if (!mountedRef.current) return;
-        setCategories(Array.isArray(res.data) ? res.data : []);
-        setLastLoadedAt(Date.now());
+        const list = Array.isArray(res.data) ? res.data : [];
+        setCategories(list);
+        const ts = Date.now();
+        setLastLoadedAt(ts);
+        lastLoadedAtRef.current = ts;
+        categoriesCountRef.current = list.length;
       } catch (err) {
         if (controller.signal.aborted) return;
         console.error("Fetch /categories failed:", err?.response?.status, err);
         const msg =
           err?.response?.data?.message ||
           (err?.code === "ERR_NETWORK" ? "Network error. Check your connection." : "Error fetching categories");
-        if (mountedRef.current) setError(msg);
+        if (mountedRef.current) {
+          setError(msg);
+          if (err?.response?.status === 401 || err?.response?.status === 403) {
+            setCategories([]);
+            setLastLoadedAt(0);
+            categoriesCountRef.current = 0;
+            lastLoadedAtRef.current = 0;
+          }
+        } 
       } finally {
         if (mountedRef.current) setLoading(false);
         inFlightRef.current = false;
       }
     },
-    [categories.length, lastLoadedAt, staleMs]
+    [staleMs]
   );
 
   // public refresh() to re-load on demand
@@ -61,12 +81,30 @@ export function CategoriesProvider({ children, staleMs = 5 * 60_000 }) {
 
   useEffect(() => {
     if (authLoading) return;
+    // Logged out: clear everything
     if (!token) {
       setCategories([]);
       setLastLoadedAt(0);
       setError("");
+      categoriesCountRef.current = 0;
+      lastLoadedAtRef.current = 0;
+      prevTokenRef.current = null;
       return;
     }
+    // Logged in: detect user/session change by token swap
+    if (prevTokenRef.current !== token) {
+      // Abort old request and clear cache so UI doesn't show prior user's data
+      ctrlRef.current?.abort();
+      setCategories([]);
+      setLastLoadedAt(0);
+      categoriesCountRef.current = 0;
+      lastLoadedAtRef.current = 0;
+      prevTokenRef.current = token;
+      // Force a fresh fetch for the new user
+      fetchOnce({ force: true });
+      return;
+    }
+    // Same user/session: honor staleness policyF
     fetchOnce({ force: false });
   }, [authLoading, token, fetchOnce]);
 
