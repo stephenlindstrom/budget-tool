@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../hooks/useAuth";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import PennyPincherLogo from "../components/PennyPincherLogo";
 
 function LoginPage() {
   const { login } = useAuth();
@@ -42,6 +43,7 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow">
         <header className="mb-6 text-center">
+          <PennyPincherLogo size={64} showWordmark={false} />
           <h2 className="text-2xl font-semibold text-slate-900">Login</h2>
           <p className="mt-1 text-sm text-slate-600">
             Welcome back! Please sign in to continue.

@@ -3,6 +3,7 @@ import api from "../api/api";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import PennyPincherLogo from "../components/PennyPincherLogo";
 
 function RegistrationPage() {
   const { login } = useAuth();
@@ -62,6 +63,7 @@ function RegistrationPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <header className="mb-6 text-center">
+          <PennyPincherLogo size={64} showWordmark={false} />
           <h1 className="text-2xl font-semibold text-slate-900">Create your account</h1>
           <p className="mt-1 text-sm text-slate-500">
             Already have one?{" "}

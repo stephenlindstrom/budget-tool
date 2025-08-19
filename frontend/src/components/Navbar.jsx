@@ -1,5 +1,6 @@
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import PennyPincherLogo from "./PennyPincherLogo";
 
 export default function Navbar() {
   const { logout } = useAuth();
@@ -15,11 +16,12 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Left side: Brand + links */}
         <div className="flex items-center gap-6">
+          <PennyPincherLogo size={42} showWordmark={false} />
           <span
             onClick={() => navigate("/dashboard")}
             className="cursor-pointer text-lg font-bold text-white hover:text-blue-300"
           >
-            MyBudget
+            Penny Pincher
           </span>
           <button
             onClick={() => navigate("/dashboard")}
