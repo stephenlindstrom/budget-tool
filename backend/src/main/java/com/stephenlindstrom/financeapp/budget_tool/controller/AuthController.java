@@ -11,6 +11,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.LoginRequest;
 import com.stephenlindstrom.financeapp.budget_tool.dto.SuccessResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.UserRegistrationDTO;
+import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.service.JwtService;
 import com.stephenlindstrom.financeapp.budget_tool.service.UserService;
 
@@ -51,7 +52,7 @@ public class AuthController {
         examples = @ExampleObject(name = "RegistrationSuccess", value = """
             {
               "message": "User registered successfully",
-              "token": null
+              "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZW1v..."
             }
             """
         )
@@ -76,8 +77,9 @@ public class AuthController {
   })
   @PostMapping("/register")
   public ResponseEntity<SuccessResponse> register(@RequestBody @Valid UserRegistrationDTO dto) {
-    userService.registerUser(dto);
-    return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse("User registered successfully"));
+    User newUser = userService.registerUser(dto);
+    String token = jwtService.generateToken(newUser.getUsername());
+    return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse("User registered successfully", token));
   }
 
   @Operation(

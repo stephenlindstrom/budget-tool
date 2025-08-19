@@ -25,9 +25,10 @@ public class UserService {
    * Registers a new user by checking for duplicates and encoding the password.
    * 
    * @param dto The DTO containing username and raw password
+   * @return the registered User entity
    * @throws IllegalArgumentException if the username is already taken
    */
-  public void registerUser(UserRegistrationDTO dto) {
+  public User registerUser(UserRegistrationDTO dto) {
     // Check if username already exists
     if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
       throw new IllegalArgumentException("Username already taken.");
@@ -37,7 +38,7 @@ public class UserService {
     String encodedPassword = passwordEncoder.encode(dto.getPassword());
     
     User user = mapToEntity(dto, encodedPassword);
-    userRepository.save(user);
+    return userRepository.save(user);
   }
 
   /**
