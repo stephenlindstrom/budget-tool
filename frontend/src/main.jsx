@@ -8,12 +8,12 @@ import { CategoriesProvider } from './context/CategoriesProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <CategoriesProvider>
-        <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <CategoriesProvider>
           <App />
-        </BrowserRouter>
-      </CategoriesProvider>
-    </AuthProvider>
+        </CategoriesProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </StrictMode>,
 )
