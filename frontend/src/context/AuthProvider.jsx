@@ -1,10 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AuthContext } from "./AuthContext";
 import { jwtDecode } from "jwt-decode";
+import { configureApi } from "../api/api";
+import { useNavigate } from "react-router-dom";
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  const navigate = useNavigate();
+
+  // Keep a live pointer to the latest token so axios always reads the current one
+  const tokenRef = useRef(null);
+  useEffect(() => { tokenRef.current = token; }, [token]);
+
+  // One-time axios wiring. getToken reads from tokenRef
+  useEffect(() => {
+    configureApi({
+      getToken: () => tokenRef.current,
+      onUnauthorized: () => {
+        localStorage.removeItem("budget-app-token");
+        setToken(null);
+        navigate("/?reason=expired");
+      },
+    });
+  }, [navigate]);
+  
 
   useEffect(() => {
     const storedToken = localStorage.getItem("budget-app-token");
@@ -25,6 +47,12 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (!token) {setUser(null); return; }
+    try { setUser(jwtDecode(token)); }
+    catch { setUser(null); }
+  }, [token]);
+
   const login = (newToken) => {
     localStorage.setItem("budget-app-token", newToken);
     setToken(newToken);
@@ -35,8 +63,13 @@ export function AuthProvider({ children }) {
     setToken(null);
   };
 
+  const value = useMemo(
+    () => ({ token, user, login, logout, loading }),
+    [token, user, loading]
+  );
+
   return (
-    <AuthContext.Provider value={{ token, login, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
