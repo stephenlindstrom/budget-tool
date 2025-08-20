@@ -1,11 +1,14 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +22,15 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
+import com.stephenlindstrom.financeapp.budget_tool.errors.BadRequestException;
+import com.stephenlindstrom.financeapp.budget_tool.errors.ConflictException;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
+import com.stephenlindstrom.financeapp.budget_tool.repository.TransactionRepository;
 
 /**
  * Service implementation for managing budget entries.
@@ -36,12 +42,14 @@ public class BudgetServiceImpl implements BudgetService {
 
   private final BudgetRepository budgetRepository;
   private final CategoryRepository categoryRepository;
+  private final TransactionRepository transactionRepository;
   private final TransactionService transactionService;
   private final UserService userService;
 
-  public BudgetServiceImpl(BudgetRepository budgetRepository, CategoryRepository categoryRepository, TransactionService transactionService, UserService userService) {
+  public BudgetServiceImpl(BudgetRepository budgetRepository, CategoryRepository categoryRepository, TransactionRepository transactionRepository, TransactionService transactionService, UserService userService) {
     this.budgetRepository = budgetRepository;
     this.categoryRepository = categoryRepository;
+    this.transactionRepository = transactionRepository;
     this.transactionService = transactionService;
     this.userService = userService;
   }
@@ -55,8 +63,19 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public BudgetDTO create(BudgetCreateDTO dto) {
     User user = userService.getAuthenticatedUser();
+
+    Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
+      .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+    if (category.getType() == TransactionType.INCOME) {
+      throw new BadRequestException("Budgets are only allowed for expense categories.");
+    }
+
+    if (budgetRepository.existsByCategoryIdAndMonthAndUser(category.getId(), dto.getMonth(), user)) {
+      throw new ConflictException("A budget already exists for this category and month.");
+    }
     
-    Budget budget = mapToEntity(dto, user);
+    Budget budget = mapToEntity(dto, user, category);
     Budget saved = budgetRepository.save(budget);
     return mapToDTO(saved);
   }
@@ -104,6 +123,14 @@ public class BudgetServiceImpl implements BudgetService {
       
     Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
         .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+     if (category.getType() == TransactionType.INCOME) {
+      throw new BadRequestException("Budgets are only allowed for expense categories.");
+    }
+
+    if (budgetRepository.existsByCategoryIdAndMonthAndUserAndIdNot(category.getId(), dto.getMonth(), user, id)) {
+      throw new ConflictException("A budget already exists for this category and month.");
+    }
       
     budget.setValue(dto.getValue());
     budget.setMonth(dto.getMonth());
@@ -197,44 +224,47 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public MonthlyBudgetSummaryDTO getMonthlyBudgetSummaries(YearMonth month) {
     User user = userService.getAuthenticatedUser();
-    List<Budget> budgets = budgetRepository.findByMonthAndUser(month, user);
-    MonthDTO monthDTO = mapToDTO(month);
 
-    List<BudgetSummaryDTO> budgetSummaries = budgets.stream().map(budget -> {
-      BigDecimal budgeted = budget.getValue();
+    final LocalDate start = month.atDay(1);
+    final LocalDate endExclusive = month.plusMonths(1).atDay(1);
 
-      TransactionFilter filter = TransactionFilter.builder()
-                                .type(TransactionType.EXPENSE)
-                                .categoryId(budget.getCategory().getId())
-                                .startDate(budget.getMonth().atDay(1))
-                                .endDate(budget.getMonth().atEndOfMonth())
-                                .build();
+    final List<Budget> budgets = budgetRepository.findByMonthAndUser(month, user);
 
-      BigDecimal spent = transactionService.filter(filter).stream()
-        .map(TransactionDTO::getAmount)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    final Map<Long, BigDecimal> spentByCategory = transactionRepository
+        .findMonthlySpentByCategory(user, start, endExclusive, TransactionType.EXPENSE)
+        .stream()
+        .collect(Collectors.toMap(
+            TransactionRepository.SpentByCategoryRow::getCategoryId,
+            row -> row.getSpent() == null ? BigDecimal.ZERO : row.getSpent()
+        ));
 
-      BigDecimal remaining = budgeted.subtract(spent);
+    final List<BudgetSummaryDTO> budgetSummaries = budgets.stream()
+        .map(budget -> {
+          final Long categoryId = budget.getCategory().getId();
+          final BigDecimal budgeted = nvl(budget.getValue());
+          final BigDecimal spent = nvl(spentByCategory.get(categoryId));
+          final BigDecimal remaining = budgeted.subtract(spent);
 
-      CategoryDTO categoryDTO = CategoryDTO.builder()
-                                .id(budget.getCategory().getId())
-                                .name(budget.getCategory().getName())
-                                .type(budget.getCategory().getType())
-                                .build();
+          final CategoryDTO categoryDTO = CategoryDTO.builder()
+              .id(categoryId)
+              .name(budget.getCategory().getName())
+              .type(budget.getCategory().getType())
+              .build();
 
-      return BudgetSummaryDTO.builder()
-                              .id(budget.getId())
-                              .category(categoryDTO)
-                              .budgeted(budgeted)
-                              .spent(spent)
-                              .remaining(remaining)
-                              .build();
-    }).toList();
+          return BudgetSummaryDTO.builder()
+              .id(budget.getId())
+              .category(categoryDTO)
+              .budgeted(budgeted)
+              .spent(spent)
+              .remaining(remaining)
+              .build();
+        })
+        .toList();
 
     return MonthlyBudgetSummaryDTO.builder()
-                                  .budgetSummaryDTOs(budgetSummaries)
-                                  .monthDTO(monthDTO)
-                                  .build();
+          .monthDTO(mapToDTO(month))
+          .budgetSummaryDTOs(budgetSummaries)
+          .build();
   }
 
   /**
@@ -268,10 +298,7 @@ public class BudgetServiceImpl implements BudgetService {
    * @return the Budget entity
    * @throws ResourceNotFoundException if the category is not found
    */
-  private Budget mapToEntity(BudgetCreateDTO dto, User user) {
-    Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
-      .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-
+  private Budget mapToEntity(BudgetCreateDTO dto, User user, Category category) {
     return Budget.builder()
             .value(dto.getValue())
             .month(dto.getMonth())
@@ -316,5 +343,9 @@ public class BudgetServiceImpl implements BudgetService {
             .value(month.format(valueFormatter))
             .display(month.format(displayFormatter))
             .build();
+  }
+
+  private static BigDecimal nvl(BigDecimal v) {
+    return v == null ? BigDecimal.ZERO : v;
   }
 }
