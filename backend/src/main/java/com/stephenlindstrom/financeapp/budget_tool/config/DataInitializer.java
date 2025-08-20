@@ -103,13 +103,6 @@ public class DataInitializer {
 
           demoBudgets.add(Budget.builder()
                   .month(month)
-                  .value(BigDecimal.valueOf(3000 + (Math.random() * 400 - 200)))
-                  .category(categories.get("Salary"))
-                  .user(user)
-                  .build());
-
-          demoBudgets.add(Budget.builder()
-                  .month(month)
                   .value(BigDecimal.valueOf(150 + (Math.random() * 50)))
                   .category(categories.get("Dining"))
                   .user(user)
