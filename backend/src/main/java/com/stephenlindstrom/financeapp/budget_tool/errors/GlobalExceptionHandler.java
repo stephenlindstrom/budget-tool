@@ -44,4 +44,13 @@ public class GlobalExceptionHandler {
     return ResponseEntity.unprocessableEntity().body(new ErrorResponse(ex.getMessage()));
   }
 
+  @ExceptionHandler(ConflictException.class)
+  public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(ex.getMessage()));
+  }
+
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+    return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage()));
+  }
 }
