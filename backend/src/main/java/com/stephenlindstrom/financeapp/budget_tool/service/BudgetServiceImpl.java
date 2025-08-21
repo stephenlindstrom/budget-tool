@@ -4,10 +4,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -19,6 +25,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyOverviewDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
@@ -29,6 +36,7 @@ import com.stephenlindstrom.financeapp.budget_tool.model.Budget;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
 import com.stephenlindstrom.financeapp.budget_tool.model.User;
 import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository;
+import com.stephenlindstrom.financeapp.budget_tool.repository.BudgetRepository.MonthlyBudgetedRow;
 import com.stephenlindstrom.financeapp.budget_tool.repository.CategoryRepository;
 import com.stephenlindstrom.financeapp.budget_tool.repository.TransactionRepository;
 
@@ -222,50 +230,90 @@ public class BudgetServiceImpl implements BudgetService {
    */
 
   @Override
-  public MonthlyBudgetSummaryDTO getMonthlyBudgetSummaries(YearMonth month) {
-    User user = userService.getAuthenticatedUser();
+public MonthlyBudgetSummaryDTO getMonthlyBudgetSummaries(YearMonth month) {
+  User user = userService.getAuthenticatedUser();
 
-    final LocalDate start = month.atDay(1);
-    final LocalDate endExclusive = month.plusMonths(1).atDay(1);
+  final LocalDate start = month.atDay(1);
+  final LocalDate endExclusive = month.plusMonths(1).atDay(1);
 
-    final List<Budget> budgets = budgetRepository.findByMonthAndUser(month, user);
+  // 1) Budgets for the month- filter to EXPENSE to avoid accidental income budgets
+  final List<Budget> budgets = budgetRepository.findByMonthAndUser(month, user)
+      .stream()
+      .filter(b -> b.getCategory() != null
+          && b.getCategory().getType() == TransactionType.EXPENSE)
+      .toList();
 
-    final Map<Long, BigDecimal> spentByCategory = transactionRepository
-        .findMonthlySpentByCategory(user, start, endExclusive, TransactionType.EXPENSE)
-        .stream()
-        .collect(Collectors.toMap(
-            TransactionRepository.SpentByCategoryRow::getCategoryId,
-            row -> row.getSpent() == null ? BigDecimal.ZERO : row.getSpent()
-        ));
+  // Map budgets by categoryId for quick lookup
+  final Map<Long, Budget> budgetByCategory = budgets.stream()
+      .collect(Collectors.toMap(b -> b.getCategory().getId(), b -> b));
 
-    final List<BudgetSummaryDTO> budgetSummaries = budgets.stream()
-        .map(budget -> {
-          final Long categoryId = budget.getCategory().getId();
-          final BigDecimal budgeted = nvl(budget.getValue());
-          final BigDecimal spent = nvl(spentByCategory.get(categoryId));
-          final BigDecimal remaining = budgeted.subtract(spent);
+  // 2) Spent by category for the month
+  final Map<Long, BigDecimal> spentByCategory = transactionRepository
+      .findMonthlySpentByCategory(user, start, endExclusive, TransactionType.EXPENSE)
+      .stream()
+      .collect(Collectors.toMap(
+          TransactionRepository.SpentByCategoryRow::getCategoryId,
+          row -> nvl(row.getSpent())
+      ));
 
-          final CategoryDTO categoryDTO = CategoryDTO.builder()
-              .id(categoryId)
-              .name(budget.getCategory().getName())
-              .type(budget.getCategory().getType())
-              .build();
+  // 3) Union of category IDs from budgets + transactions
+  final Set<Long> categoryIds = new HashSet<>(budgetByCategory.keySet());
+  categoryIds.addAll(spentByCategory.keySet());
 
-          return BudgetSummaryDTO.builder()
-              .id(budget.getId())
-              .category(categoryDTO)
-              .budgeted(budgeted)
-              .spent(spent)
-              .remaining(remaining)
-              .build();
-        })
-        .toList();
+  // 4) Fetch any missing Category entities in one batch
+  final Set<Long> missingIds = categoryIds.stream()
+      .filter(id -> !budgetByCategory.containsKey(id))
+      .collect(Collectors.toSet());
 
-    return MonthlyBudgetSummaryDTO.builder()
-          .monthDTO(mapToDTO(month))
-          .budgetSummaryDTOs(budgetSummaries)
-          .build();
-  }
+  final Map<Long, Category> extraCategories = missingIds.isEmpty()
+      ? Collections.emptyMap()
+      : categoryRepository.findAllById(missingIds).stream()
+          .collect(Collectors.toMap(Category::getId, c -> c));
+
+  // 5) Build DTOs for every category in the union
+  final List<BudgetSummaryDTO> budgetSummaries = categoryIds.stream()
+      .map(catId -> {
+        final Budget budget = budgetByCategory.get(catId);
+        final Category category = (budget != null)
+            ? budget.getCategory()
+            : extraCategories.get(catId);
+
+        // If category was deleted but transactions remain, guard with a placeholder
+        final Long categoryId = (category != null) ? category.getId() : catId;
+        final String categoryName = (category != null) ? category.getName() : "(Unknown Category)";
+        final TransactionType categoryType = (category != null) ? category.getType() : TransactionType.EXPENSE;
+
+        
+        if (categoryType != TransactionType.EXPENSE) return null;
+
+        final BigDecimal budgeted = nvl(budget != null ? budget.getValue() : null); // 0 if no budget
+        final BigDecimal spent = nvl(spentByCategory.get(catId));
+        final BigDecimal remaining = budgeted.subtract(spent);
+
+        final CategoryDTO categoryDTO = CategoryDTO.builder()
+            .id(categoryId)
+            .name(categoryName)
+            .type(categoryType)
+            .build();
+
+        return BudgetSummaryDTO.builder()
+            .id(budget != null ? budget.getId() : null) // null => “no budget yet”
+            .category(categoryDTO)
+            .budgeted(budgeted)
+            .spent(spent)
+            .remaining(remaining)
+            .build();
+      })
+      .filter(Objects::nonNull)
+      // nice default sort: by category name
+      .sorted(Comparator.comparing(d -> d.getCategory().getName(), String.CASE_INSENSITIVE_ORDER))
+      .toList();
+
+  return MonthlyBudgetSummaryDTO.builder()
+      .monthDTO(mapToDTO(month))
+      .budgetSummaryDTOs(budgetSummaries)
+      .build();
+}
 
   /**
    * Retrieves all budgets for a specific month.
@@ -290,7 +338,72 @@ public class BudgetServiceImpl implements BudgetService {
     User user = userService.getAuthenticatedUser();
     return budgetRepository.findDistinctMonthsByUser(user).stream().sorted(Comparator.reverseOrder()).map(this::mapToDTO).toList();
   }
-  
+
+  @Override
+  public List<MonthlyOverviewDTO> getMonthlyOverviews() {
+    User user = userService.getAuthenticatedUser();
+
+    // budgeted per month (EXPENSE categories only)
+    Map<YearMonth, BigDecimal> budgetedByMonth =
+        budgetRepository.findMonthlyBudgeted(user).stream()
+            .collect(Collectors.toMap(
+                MonthlyBudgetedRow::getMonth,
+                r -> nvl(r.getBudgeted())
+            ));
+
+    // spent per month (expenses)
+    Map<YearMonth, BigDecimal> spentByMonth =
+        transactionRepository.findMonthlySpentByMonth(user, TransactionType.EXPENSE).stream()
+            .collect(Collectors.toMap(
+                r -> YearMonth.of(r.getYear(), r.getMonth()),
+                r -> nvl(r.getSpent())
+            ));
+
+    // income per month
+    Map<YearMonth, BigDecimal> incomeByMonth =
+        transactionRepository.findMonthlySpentByMonth(user, TransactionType.INCOME).stream()
+            .collect(Collectors.toMap(
+                r -> YearMonth.of(r.getYear(), r.getMonth()),
+                r -> nvl(r.getSpent()) // alias is "spent" in interface; value will be income here
+            ));
+
+    // union of all months, newest first
+    NavigableSet<YearMonth> months = new TreeSet<>(Comparator.reverseOrder());
+    months.addAll(budgetedByMonth.keySet());
+    months.addAll(spentByMonth.keySet());
+    months.addAll(incomeByMonth.keySet());
+
+    return months.stream()
+        .map(m -> {
+          BigDecimal budgeted = budgetedByMonth.getOrDefault(m, BigDecimal.ZERO);
+          BigDecimal spent = spentByMonth.getOrDefault(m, BigDecimal.ZERO);
+          BigDecimal income = incomeByMonth.getOrDefault(m, BigDecimal.ZERO);
+          BigDecimal remaining = budgeted.subtract(spent);
+          return MonthlyOverviewDTO.builder()
+              .month(m)
+              .budgeted(budgeted)
+              .spent(spent)
+              .remaining(remaining)
+              .income(income)
+              .build();
+        })
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public MonthlyOverviewDTO getMonthlyOverviewByMonth(YearMonth month) {
+    return getMonthlyOverviews().stream()
+        .filter(dto -> dto.getMonth().equals(month))
+        .findFirst()
+        .orElseGet(() -> MonthlyOverviewDTO.builder()
+            .month(month)
+            .budgeted(BigDecimal.ZERO)
+            .spent(BigDecimal.ZERO)
+            .remaining(BigDecimal.ZERO)
+            .income(BigDecimal.ZERO)
+            .build());
+  }
+
   /**
    * Maps a BudgetCreateDTO to a Budget entity.
    * 

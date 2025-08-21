@@ -9,6 +9,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyOverviewDTO;
 
 /**
  * Service interface for managing budgets.
@@ -95,4 +96,8 @@ public interface BudgetService {
      * @return list of MonthDTOs representing available months
      */
     List<MonthDTO> getAvailableMonths();
+
+    List<MonthlyOverviewDTO> getMonthlyOverviews();
+
+    MonthlyOverviewDTO getMonthlyOverviewByMonth(YearMonth month);
 }

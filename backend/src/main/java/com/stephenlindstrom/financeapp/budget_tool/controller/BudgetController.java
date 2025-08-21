@@ -20,6 +20,7 @@ import com.stephenlindstrom.financeapp.budget_tool.dto.BudgetDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyBudgetSummaryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.MonthlyOverviewDTO;
 import com.stephenlindstrom.financeapp.budget_tool.service.BudgetService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -273,6 +274,20 @@ public class BudgetController {
   ) {
     YearMonth ym = new YearMonthConverter().convertToEntityAttribute(month);
     return ResponseEntity.ok(budgetService.getMonthlyBudgetSummaries(ym));
+  }
+
+  @GetMapping("/overview")
+  public ResponseEntity<List<MonthlyOverviewDTO>> getMonthlyOverviews() {
+    return ResponseEntity.ok(budgetService.getMonthlyOverviews());
+  }
+
+  @GetMapping("/overview/{month}")
+  public ResponseEntity<MonthlyOverviewDTO> getMonthlyOverviewByMonth(
+    @Parameter(description = "Month of overview to retrieve in YYYY-MM format")
+    @PathVariable String month
+  ) {
+    YearMonth ym = new YearMonthConverter().convertToEntityAttribute(month);
+    return ResponseEntity.ok(budgetService.getMonthlyOverviewByMonth(ym));
   }
 
 }
