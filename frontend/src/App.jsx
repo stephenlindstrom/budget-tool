@@ -9,6 +9,8 @@ import { configureApi } from "./api/api";
 import ProtectedLayout from "./routes/ProtectedLayout";
 import TransactionPage from "./pages/TransactionPage";
 import RegistrationPage from "./pages/RegistrationPage";
+import BudgetOverviewPage from "./pages/BudgetOverviewPage";
+import BudgetMonthPage from "./pages/BudgetMonthPage";
 
 function App() {
   const { token, logout } = useAuth();
@@ -26,9 +28,10 @@ function App() {
       <Route path="/register" element={<RegistrationPage />} />
       <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/budgets/:value" element={<BudgetSummaryPage />} />
         <Route path="/create_budget" element={<CreateBudgetPage />} />
         <Route path="/transactions" element={<TransactionPage />} />
+        <Route path="/budgets" element={<BudgetOverviewPage />} />
+        <Route path="/budgets/:month" element={<BudgetMonthPage />} />
       </Route>
     </Routes>
   );
