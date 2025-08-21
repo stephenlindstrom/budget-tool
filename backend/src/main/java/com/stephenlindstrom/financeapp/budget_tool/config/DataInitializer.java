@@ -136,6 +136,15 @@ public class DataInitializer {
                     .type(categories.get("Salary").getType())
                     .user(user)
                     .build());
+                  
+          demoTransactions.add(Transaction.builder()
+                    .description("Freelance PT work")
+                    .amount(BigDecimal.valueOf(500 + random.nextInt(500)))
+                    .date(LocalDate.of(year, mon, 1))
+                    .category(categories.get("Freelance"))
+                    .type(categories.get("Freelance").getType())
+                    .user(user)
+                    .build());
 
           demoTransactions.add(Transaction.builder()
                     .description("Rent Payment")
