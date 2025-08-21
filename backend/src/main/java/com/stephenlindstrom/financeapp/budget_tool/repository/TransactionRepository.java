@@ -19,14 +19,17 @@ import com.stephenlindstrom.financeapp.budget_tool.model.User;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
   interface SpentByCategoryRow {
     Long getCategoryId();
+    String getCategoryName();
     BigDecimal getSpent();
   }
 
   @Query("""
     select t.category.id as categoryId,
-           sum(case when t.type = :expenseType then t.amount else 0 end) as spent
+            t.category.name as categoryName,
+            sum(t.amount) as spent
     from Transaction t
     where t.user = :user
+      and t.type = :expenseType
       and t.date >= :startInclusive
       and t.date < :endExclusive
     group by t.category.id
