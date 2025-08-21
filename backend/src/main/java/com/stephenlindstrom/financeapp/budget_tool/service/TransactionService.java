@@ -1,7 +1,9 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
+import java.time.YearMonth;
 import java.util.List;
 
+import com.stephenlindstrom.financeapp.budget_tool.dto.IncomeSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
@@ -50,4 +52,6 @@ public interface TransactionService {
      * @param id the ID of the transaction to delete
      */
     void deleteById(Long id);
+
+    List<IncomeSummaryDTO> getMonthlyIncomeSources(YearMonth month);
 }

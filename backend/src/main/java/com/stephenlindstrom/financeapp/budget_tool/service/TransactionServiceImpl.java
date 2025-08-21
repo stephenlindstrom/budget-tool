@@ -1,15 +1,19 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.stephenlindstrom.financeapp.budget_tool.dto.CategoryDTO;
+import com.stephenlindstrom.financeapp.budget_tool.dto.IncomeSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
+import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 import com.stephenlindstrom.financeapp.budget_tool.errors.CategoryTypeMismatchException;
 import com.stephenlindstrom.financeapp.budget_tool.errors.ResourceNotFoundException;
 import com.stephenlindstrom.financeapp.budget_tool.model.Category;
@@ -149,6 +153,23 @@ public class TransactionServiceImpl implements TransactionService {
    * @param transaction the Transaction entity
    * @return the mapped TransactionDTO
    */
+
+  @Override
+  public List<IncomeSummaryDTO> getMonthlyIncomeSources(YearMonth month) {
+    User user = userService.getAuthenticatedUser();
+    LocalDate start = month.atDay(1);
+    LocalDate endExclusive = month.plusMonths(1).atDay(1);
+
+    return transactionRepository.findMonthlySpentByCategory(user, start, endExclusive, TransactionType.INCOME)
+        .stream()
+        .map(r -> IncomeSummaryDTO.builder()
+            .categoryId(r.getCategoryId())
+            .categoryName(r.getCategoryName())
+            .amount(r.getSpent() == null ? BigDecimal.ZERO : r.getSpent())
+            .build())
+        .toList();
+  }
+  
   private TransactionDTO mapToDTO(Transaction transaction) {
     Category category = transaction.getCategory();
 

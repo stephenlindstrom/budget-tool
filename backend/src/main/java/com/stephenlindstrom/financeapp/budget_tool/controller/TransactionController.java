@@ -1,5 +1,6 @@
 package com.stephenlindstrom.financeapp.budget_tool.controller;
 
+import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.stephenlindstrom.financeapp.budget_tool.converter.YearMonthConverter;
 import com.stephenlindstrom.financeapp.budget_tool.dto.ErrorResponse;
+import com.stephenlindstrom.financeapp.budget_tool.dto.IncomeSummaryDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionCreateDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionDTO;
 import com.stephenlindstrom.financeapp.budget_tool.dto.TransactionFilter;
@@ -179,4 +182,13 @@ public class TransactionController {
     transactionService.deleteById(id);
     return ResponseEntity.noContent().build();
   }
+
+  @GetMapping("/income-sources/{month}")
+  public ResponseEntity<List<IncomeSummaryDTO>> getIncomeSources(
+    @Parameter(description = "Month of income sources to retrieve in YYYY-MM format")
+    @PathVariable String month
+  ) {
+    YearMonth ym = new YearMonthConverter().convertToEntityAttribute(month);
+    return ResponseEntity.ok(transactionService.getMonthlyIncomeSources(ym));
+  } 
 }
