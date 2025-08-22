@@ -1,6 +1,7 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -82,8 +83,11 @@ public class BudgetServiceImpl implements BudgetService {
     if (budgetRepository.existsByCategoryIdAndMonthAndUser(category.getId(), dto.getMonth(), user)) {
       throw new ConflictException("A budget already exists for this category and month.");
     }
+
+    BigDecimal roundedValue = dto.getValue().setScale(2, RoundingMode.HALF_UP);
     
     Budget budget = mapToEntity(dto, user, category);
+    budget.setValue(roundedValue);
     Budget saved = budgetRepository.save(budget);
     return mapToDTO(saved);
   }
@@ -139,8 +143,10 @@ public class BudgetServiceImpl implements BudgetService {
     if (budgetRepository.existsByCategoryIdAndMonthAndUserAndIdNot(category.getId(), dto.getMonth(), user, id)) {
       throw new ConflictException("A budget already exists for this category and month.");
     }
+
+    BigDecimal roundedValue = dto.getValue().setScale(2, RoundingMode.HALF_UP);
       
-    budget.setValue(dto.getValue());
+    budget.setValue(roundedValue);
     budget.setMonth(dto.getMonth());
     budget.setCategory(category);
     

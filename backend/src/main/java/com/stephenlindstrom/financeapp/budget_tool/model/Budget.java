@@ -20,7 +20,7 @@ public class Budget {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "budget_value")
+  @Column(name = "budget_value", precision = 12, scale = 2)
   private BigDecimal value;
 
   @Convert(converter = YearMonthConverter.class)

@@ -1,6 +1,7 @@
 package com.stephenlindstrom.financeapp.budget_tool.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -48,7 +49,11 @@ public class TransactionServiceImpl implements TransactionService {
   @Override
   public TransactionDTO create(TransactionCreateDTO dto) {
     User user = userService.getAuthenticatedUser();
+
+    BigDecimal roundedAmount = dto.getAmount().setScale(2, RoundingMode.HALF_UP);
+
     Transaction transaction = mapToEntity(dto, user);
+    transaction.setAmount(roundedAmount);
     Transaction saved = transactionRepository.save(transaction);
     return mapToDTO(saved);
   }
@@ -125,7 +130,9 @@ public class TransactionServiceImpl implements TransactionService {
     Category category = categoryRepository.findByIdAndUser(dto.getCategoryId(), user)
       .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-    transaction.setAmount(dto.getAmount());
+    BigDecimal roundedAmount = dto.getAmount().setScale(2, RoundingMode.HALF_UP);
+
+    transaction.setAmount(roundedAmount);
     transaction.setCategory(category);
     transaction.setType(dto.getType());
     transaction.setDate(dto.getDate());

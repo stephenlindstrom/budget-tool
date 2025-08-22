@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
@@ -15,6 +16,7 @@ public class BudgetCreateDTO {
   @Schema(description = "Budget amount", example = "550.50", minimum = "0")
   @NotNull
   @PositiveOrZero
+  @Digits(integer = 10, fraction = 2)
   private BigDecimal value;
 
   @Schema(description = "Year and month of budget", example = "2025-01", type = "string", pattern = "yyyy-MM")

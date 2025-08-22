@@ -23,6 +23,7 @@ public class Transaction {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(precision = 12, scale = 2)
   private BigDecimal amount;
 
   @JsonIgnore

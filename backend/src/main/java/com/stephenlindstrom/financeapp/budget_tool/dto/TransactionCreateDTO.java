@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import com.stephenlindstrom.financeapp.budget_tool.enums.TransactionType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
@@ -18,6 +19,7 @@ public class TransactionCreateDTO {
   @Schema(description = "Transaction amount", example = "98.57", minimum = "0")
   @NotNull
   @PositiveOrZero
+  @Digits(integer = 10, fraction = 2)
   private BigDecimal amount;
 
   @Schema(description = "Category ID that transaction belongs to", example = "1")
