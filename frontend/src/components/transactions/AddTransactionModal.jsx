@@ -52,7 +52,7 @@ function AddTransactionModal({ open, onClose, onCreated }) {
 
   const handleCreateCategory = async (name, type) => {
     const res = await api.post("/categories", {name: name.trim(), type });
-    const created = res.data
+    const created = res.data;
     await refreshCats();
    
     setForm((f) => {
