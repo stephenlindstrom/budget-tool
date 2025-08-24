@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
-import { DollarSign, TrendingDown, Wallet, PiggyBank } from "lucide-react";
+import { DollarSign, TrendingDown, Wallet, PiggyBank, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import AddBudgetModal from "../components/budgets/AddBudgetModal";
 
 export default function BudgetOverviewPage() {
   const [rows, setRows] = useState([]);           // Array<MonthlyOverviewDTO>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(null); // "YYYY-MM"
+
+  const [openAddBudget, setOpenAddBudget] = useState(false);
 
   const currency = useMemo(
     () =>
@@ -67,17 +70,29 @@ export default function BudgetOverviewPage() {
   return (
     <div className="mx-auto max-w-6xl p-4">
       {/* Header */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 grid grid-cols-1 items-center gap-3 sm:grid-cols-[1fr_auto]">
         <h1 className="text-xl font-semibold">Budget Overview</h1>
-        <div className="flex items-center gap-2">
-          <label htmlFor="month" className="text-sm text-slate-600">Month</label>
-          <input
-            id="month"
-            type="month"
-            value={selectedMonth || ""}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-lg border px-2 py-1 text-sm"
-          />
+
+        <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-2">
+            <label htmlFor="month" className="text-sm text-slate-600 cursor-pointer">Month</label>
+            <input
+              id="month"
+              type="month"
+              onClick={(e) => e.currentTarget.showPicker?.()}
+              value={selectedMonth || ""}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="rounded-lg border px-2 py-1 text-sm cursor-pointer focus:cursor-text disabled:cursor-not-allowed" 
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpenAddBudget(true)}
+            className="h-9 w-full sm:w-auto inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer"
+          >
+            <Plus size={16} />
+            Add budget
+          </button>
         </div>
       </div>
 
@@ -185,6 +200,17 @@ export default function BudgetOverviewPage() {
           </tbody>
         </table>
       </div>
+      <AddBudgetModal
+        open={openAddBudget}
+        onClose={() => setOpenAddBudget(false)}
+        defaultMonth={selectedMonth || toYearMonth(new Date())}
+        onCreated={(b) => {
+          const ym = toYm(b?.month);
+          const val = toNum(b?.value);
+          setRows((prev) => upsertOverview(prev, ym, val));
+          setSelectedMonth(ym); // jump to the month that was just edited
+        }}
+      />
     </div>
   );
 }
@@ -217,7 +243,6 @@ function toYearMonth(d) {
 
 function toYm(v) {
   if (!v) return null;
-  // Backend likely returns "YYYY-MM". If it sends an object (e.g., {year:2025, month:8}) handle that too.
   if (typeof v === "string") return v.length === 7 ? v : String(v).slice(0, 7);
   if (typeof v === "object" && v.year && v.month) {
     const mm = String(v.month).padStart(2, "0");
@@ -238,4 +263,31 @@ function fmtMonth(ym) {
   const [y, m] = ym.split("-").map(Number);
   const d = new Date(y, (m || 1) - 1, 1);
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" }); // e.g., "Aug 2025"
+}
+
+function round2(n) {
+  return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+}
+
+function upsertOverview(list, ym, addValue) {
+  let found = false;
+  const next = list.map((r) => {
+    if (r.month !== ym) return r;
+    found = true;
+    const budgeted = round2(r.budgeted + addValue);
+    const remaining = round2(budgeted - r.spent);
+    return { ...r, budgeted, remaining };
+  });
+  if (!found) {
+    next.push({
+      month: ym,
+      budgeted: round2(addValue),
+      spent: 0,
+      remaining: round2(addValue),
+      income: 0,
+    });
+  }
+
+  next.sort((a, b) => (a.month < b.month ? 1 : a.month > b.month ? -1 : 0));
+  return next;
 }
