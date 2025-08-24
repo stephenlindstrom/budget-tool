@@ -121,7 +121,6 @@ export default function CategoryModal({
       setCreating(true);
       setError("");
       await onCreate(name.trim(), type);
-      onClose();
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
