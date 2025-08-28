@@ -3,6 +3,7 @@ import api from "../api/api";
 import { DollarSign, TrendingDown, Wallet, PiggyBank, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import AddBudgetModal from "../components/budgets/AddBudgetModal";
+import { useCategories } from "../hooks/useCategories";
 
 export default function BudgetOverviewPage() {
   const [rows, setRows] = useState([]);           // Array<MonthlyOverviewDTO>
@@ -11,6 +12,9 @@ export default function BudgetOverviewPage() {
   const [selectedMonth, setSelectedMonth] = useState(null); // "YYYY-MM"
 
   const [openAddBudget, setOpenAddBudget] = useState(false);
+
+
+  const { categories, loading: loadingCats, error: catsError, refresh: refreshCats } = useCategories();
 
   const currency = useMemo(
     () =>
@@ -204,6 +208,11 @@ export default function BudgetOverviewPage() {
         open={openAddBudget}
         onClose={() => setOpenAddBudget(false)}
         defaultMonth={selectedMonth || toYearMonth(new Date())}
+        categories={categories}
+        loadingCats={loadingCats}
+        catsError={catsError}
+        refreshCats={refreshCats}
+        blockedCategoryIds={new Set()}
         onCreated={(b) => {
           const ym = toYm(b?.month);
           const val = toNum(b?.value);
