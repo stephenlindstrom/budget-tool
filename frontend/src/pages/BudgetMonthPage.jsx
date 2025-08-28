@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, Plus, Calculator } from "lucide-react";
+import AddBudgetModal from "../components/budgets/AddBudgetModal";
+import { useCategories } from "../hooks/useCategories";
 
 export default function BudgetMonthPage() {
   const { month: monthParam } = useParams(); // route like /budgets/:month ("YYYY-MM")
@@ -18,6 +20,15 @@ export default function BudgetMonthPage() {
   const [query, setQuery] = useState("");
   const [hideZero, setHideZero] = useState(false);
   const [sort, setSort] = useState({ key: "category", dir: "asc" });
+
+  const [openAddBudget, setOpenAddBudget] = useState(false);
+
+  const { categories, loading: loadingCats, error: catsError, refresh: refreshCats } = useCategories();
+
+  const blockedCategoryIds = useMemo(
+    () => new Set(items.filter(r => r.id != null).map(r => String(r.categoryId))),
+    [items]
+  );
 
   const currency = useMemo(
     () =>
@@ -46,6 +57,7 @@ useEffect(() => {
         setItems(
           budgetList.map((r) => ({
             id: r.id,
+            categoryId: r?.category?.id ?? null,
             categoryName: r?.category?.name ?? "(Uncategorized)",
             type: r?.category?.type ?? "EXPENSE",
             budgeted: toNum(r.budgeted),
@@ -174,6 +186,14 @@ useEffect(() => {
               className="rounded-lg border px-2 py-1 text-sm"
             />
           </div>
+          <button
+            type="button"
+            onClick={() => setOpenAddBudget(true)}
+            className="h-9 w-full sm:w-auto inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer"
+          >
+            <Plus size={16} />
+            Add budget
+          </button>
         </div>
       </div>
 
@@ -269,7 +289,7 @@ useEffect(() => {
                   const hasBudget = r.id != null;
                   const pct = usedPct(r);
                   return (
-                    <tr key={r.id ?? r.categoryName} className="border-b last:border-0">
+                    <tr key={r.categoryId ?? r.id ?? r.categoryName} className="border-b last:border-0">
                       {/* Category + "No budget" badge */}
                       <td className="px-3 py-3 font-medium">
                         <div className="flex items-center gap-2">
@@ -410,7 +430,31 @@ useEffect(() => {
           </table>
         </div>
       </div>
-
+      <AddBudgetModal
+        open={openAddBudget}
+        onClose={() => setOpenAddBudget(false)}
+        defaultMonth={monthValue}
+        categories={categories}
+        blockedCategoryIds={blockedCategoryIds}
+        loadingCats={loadingCats}
+        catsError={catsError}
+        refreshCats={refreshCats}
+        onCreated={(b) => {
+          const ym = toYm(b?.month);
+          if (ym !== monthValue) return;
+          
+          const val = round2(toNum(b?.value));
+          const cat = b.category;
+          setItems(prev => 
+            applyNewBudget(prev, {
+              budgetId: b?.id,
+              categoryId: cat?.id ?? null,
+              categoryName: cat?.name ?? "",
+              addValue: val,
+            })
+          );
+        }}
+      />
     </div>
   );
 }
@@ -454,18 +498,69 @@ function toYearMonth(d) {
   const m = `${d.getMonth() + 1}`.padStart(2, "0");
   return `${y}-${m}`;
 }
+
+function toYm(v) {
+  if (!v) return null;
+  if (typeof v === "string") return v.length === 7 ? v : String(v).slice(0, 7);
+  if (typeof v === "object" && v.year && v.month) {
+    const mm = String(v.month).padStart(2, "0");
+    return `${v.year}-${mm}`;
+  }
+  return String(v);
+}
+
 function fmtMonth(ym) {
   if (!ym || typeof ym !== "string" || ym.length < 7) return ym || "";
   const [y, m] = ym.split("-").map(Number);
   const d = new Date(y, (m || 1) - 1, 1);
   return d.toLocaleDateString("en-US", { month: "long", year: "numeric" }); // "March 2025"
 }
+
 function toNum(v) {
   if (typeof v === "number") return v;
   if (v == null) return 0;
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
+
 function usedPct(row) {
   return row.budgeted > 0 ? (row.spent / row.budgeted) * 100 : 0;
+}
+
+function round2(n) {
+  return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+}
+
+function applyNewBudget(list, { budgetId, categoryId, categoryName, addValue }) {
+  if (categoryId == null) return list;
+
+  const idx = list.findIndex(r => String(r.categoryId) === String(categoryId));
+  if (idx === -1) {
+    // brand new row
+    const budgeted = round2(addValue);
+    return [
+      ...list,
+      {
+        id: budgetId ?? null,
+        categoryId,
+        categoryName: categoryName || "(Uncategorized)",
+        type: "EXPENSE",
+        budgeted,
+        spent: 0,
+        remaining: budgeted,
+      },
+    ];
+  }
+
+  const row = list[idx];
+
+  // already had a budget → create-only: leave it unchanged
+  if (row.id != null) return list;
+
+  // promote "No budget" row → still create-only (not modifying an existing budget)
+  const budgeted = round2(addValue);
+  const remaining = round2(budgeted - (row.spent ?? 0));
+  const next = list.slice();
+  next[idx] = { ...row, id: budgetId ?? null, budgeted, remaining };
+  return next;
 }
