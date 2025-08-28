@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useCategories } from "../../hooks/useCategories";
 import api from "../../api/api";
 import CategoryModal from "../categories/CategoryModal";
 
-function AddBudgetModal({ open, onClose, onCreated, defaultMonth }) {
-  const { categories, loading: loadingCats, error: catsError, refresh: refreshCats } = useCategories();
+function AddBudgetModal({ open, onClose, onCreated, defaultMonth, categories = [], 
+  blockedCategoryIds, loadingCats = false, catsError = "", refreshCats}) {
 
   const [showCatModal, setShowCatModal] = useState(false);
 
@@ -19,6 +18,20 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth }) {
   const firstFieldRef = useRef(null);
   const prevFocusRef = useRef(null);
   const dialogRef = useRef(null);
+
+  const blocked = useMemo(
+    () => new Set(Array.from(blockedCategoryIds ?? []).map(String)),
+    [blockedCategoryIds]
+  );
+
+  const opts = useMemo(
+    () =>
+    (categories ?? [])
+      .filter(c => c.type === "EXPENSE")
+      .map(c => ({ ...c, blocked: blocked.has(String(c.id)) }))
+      .sort((a, b) => (a.blocked === b.blocked ? a.name.localeCompare(b.name) : a.blocked - b.blocked)),
+    [categories, blocked]
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -104,11 +117,6 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth }) {
       style.overflow = 'hidden';
       return () => { style.overflow = prev; };
     }, [open]);
-
-  const visibleCategories = useMemo(
-    () => categories.filter((c) => c.type === "EXPENSE"),
-    [categories]
-  );
 
   const onChange = (e) => setForm(f => ({...f, [e.target.name]: e.target.value }));
 
@@ -256,16 +264,16 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth }) {
               name="categoryId"
               value={form.categoryId}
               onChange={onChange}
-              disabled={loadingCats || visibleCategories.length === 0 || catsError}
+              disabled={loadingCats || opts.length === 0 || catsError}
               aria-invalid={categoryMissing || undefined}
               required
             >
               <option value="">
-                {visibleCategories.length === 0 ? "No expense categories" : "Select category"}
+                {opts.length === 0 ? "No available expense categories" : "Select category"}
               </option>
-              {visibleCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              {opts.map((c) => (
+                <option key={c.id} value={c.id} disabled={c.blocked}>
+                  {c.name}{c.blocked ? "- already budgeted" : ""}
                 </option>
               ))}
             </select>
