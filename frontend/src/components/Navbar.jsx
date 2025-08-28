@@ -25,19 +25,19 @@ export default function Navbar() {
           </span>
           <button
             onClick={() => navigate("/dashboard")}
-            className="text-sm font-medium text-slate-200 transition hover:text-white"
+            className="text-sm font-medium text-slate-200 transition hover:text-white cursor-pointer"
           >
             Dashboard
           </button>
           <button
             onClick={() => navigate("/transactions")}
-            className="text-sm font-medium text-slate-200 transition hover:text-white"
+            className="text-sm font-medium text-slate-200 transition hover:text-white cursor-pointer"
           >
             Transactions
           </button>
           <button
             onClick={() => navigate("/budgets")}
-            className="text-sm font-medium text-slate-200 transition hover:text-white"
+            className="text-sm font-medium text-slate-200 transition hover:text-white cursor-pointer"
           >
             Budgets
           </button>
