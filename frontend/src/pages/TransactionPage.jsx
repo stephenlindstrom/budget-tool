@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import api from "../api/api";
-import { ChevronUp, ChevronDown, ChevronsUpDown, Plus } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, Plus, Trash } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
 import AddTransactionModal from "../components/transactions/AddTransactionModal";
 
@@ -20,6 +20,7 @@ function TransactionPage() {
   const [transactions, setTransactions] = useState([]);
   const [transError, setTransError] = useState("");
   const [loadingTrans, setLoadingTrans] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   // ---- Filter state ----
   const [filter, setFilter] = useState({
@@ -112,6 +113,34 @@ function TransactionPage() {
     }
   }, [filter]);
 
+  const handleDelete = useCallback(async (id) => {
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+    if (!window.confirm("Delete this transaction?")) return;
+
+    setDeletingId(id);
+    setTransError("");
+
+    // optimistic remove
+    setTransactions(list => list.filter(t => t.id !== id));
+
+    try {
+      await api.delete(`/transactions/${id}`);
+    } catch (err) {
+      // rollback on failure
+      setTransactions(list => {
+        // reinsert and let existing sort logic reorder it
+        return [...list, tx];
+      });
+      const msg =
+        err?.response?.data?.message ||
+        (err?.code === "ERR_NETWORK" ? "Network error. Check your connection." : "Delete failed");
+      setTransError(msg);
+    } finally {
+      setDeletingId(null);
+    }
+  }, [transactions]);
+
   // initial load
   useEffect(() => {
     if (!authLoading) fetchAll();
@@ -172,6 +201,7 @@ function TransactionPage() {
     { id: "description", header: "Description", sortable: true, defaultDir: "asc"},
     { id: "category", header: "Category", sortable: true, defaultDir: "asc"},
     { id: "amount", header: "Amount", align: "right", sortable: true, defaultDir: "desc" },
+    { id: "actions", header: "", sortable: false },
   ];
 
   const colCount = columns.length;
@@ -416,6 +446,18 @@ function TransactionPage() {
                   </td>
                   <td className={`px-4 py-3 text-sm text-slate-900 ${amountAlign}`}>
                     {currencyFormatter.format(Number(amount ?? 0))}
+                  </td>
+                  <td className="px-2 py-2 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(id)}
+                      disabled={deletingId === id || loadingTrans}
+                      aria-label={`Delete ${description ?? "transaction"}`}
+                      title={deletingId === id ? "Deleting..." : "Delete transaction"}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-red-50 disabled:opacity-50 cursor-pointer"
+                    >
+                      <Trash size={16}/>
+                    </button>
                   </td>
                 </tr>
               ))}
