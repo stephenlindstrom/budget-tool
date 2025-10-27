@@ -42,7 +42,7 @@ function RegistrationPage() {
       });
       const actualToken = res.data.token;
       login(actualToken);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       console.error("Registration failed:", err?.response?.status, err);
       const status = err?.response?.status;

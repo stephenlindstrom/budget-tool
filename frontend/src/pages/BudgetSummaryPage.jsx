@@ -63,7 +63,7 @@ function BudgetSummaryPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
       <div className="mb-4">
         <button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/")}
           className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
         >
           ← Back to Dashboard

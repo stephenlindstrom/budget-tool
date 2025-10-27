@@ -30,7 +30,7 @@ function LoginPage() {
       const response = await api.post("/auth/login", form);
       const actualToken = response.data.token;
       login(actualToken);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       console.error(err);
       setError("Invalid username or password");

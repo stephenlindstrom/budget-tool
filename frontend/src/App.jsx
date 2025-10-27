@@ -27,7 +27,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegistrationPage />} />
       <Route element={<ProtectedLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/" element={<DashboardPage />} />
         <Route path="/create_budget" element={<CreateBudgetPage />} />
         <Route path="/transactions" element={<TransactionPage />} />
         <Route path="/budgets" element={<BudgetOverviewPage />} />

@@ -18,13 +18,13 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <PennyPincherLogo size={42} showWordmark={false} />
           <span
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             className="cursor-pointer text-lg font-bold text-white hover:text-blue-300"
           >
             Penny Pincher
           </span>
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
             className="text-sm font-medium text-slate-200 transition hover:text-white cursor-pointer"
           >
             Dashboard
