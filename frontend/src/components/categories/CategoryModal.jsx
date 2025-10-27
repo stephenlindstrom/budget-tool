@@ -198,7 +198,7 @@ export default function CategoryModal({
               onChange={(e) => setType(e.target.value)}
               required
               disabled={creating}
-              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
+              className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500 cursor-pointer"
             >
               <option value="">Select a type</option>
               <option value="INCOME">Income</option>
@@ -211,14 +211,14 @@ export default function CategoryModal({
               type="button"
               onClick={onClose}
               disabled={creating}
-              className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60"
+              className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={creating || !name.trim() || !type}
-              className="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              className="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60 cursor-pointer"
             >
               {creating ? "Creating..." : "Create"}
             </button>

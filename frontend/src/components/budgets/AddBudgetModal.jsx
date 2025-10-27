@@ -241,7 +241,7 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth, categories = [
           <label htmlFor="month" className="sr-only">Month</label>
           <input
             id="month" aria-describedby={error ? "add-budget-error" : undefined}
-            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 cursor-pointer"
             type="month"
             name="month"
             value={form.month}
@@ -253,7 +253,7 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth, categories = [
           <div className="grid grid-cols-[1fr_auto] items-center gap-2">
             <label htmlFor="categoryId" className="sr-only">Category</label>
             <select
-              className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500 ${
+              className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500 cursor-pointer ${
                 catsError 
                   ? "border-red-500 focus:ring-red-500/20" 
                   : "border-slate-300 focus:border-blue-600 focus:ring-blue-600/20"
@@ -281,7 +281,7 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth, categories = [
             <button
               type="button"
               onClick={() => setShowCatModal(true)}
-              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+              className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 cursor-pointer"
               aria-label="Create new category"
             >
               + New
@@ -315,14 +315,14 @@ function AddBudgetModal({ open, onClose, onCreated, defaultMonth, categories = [
             <button
               type="button"
               onClick={onClose}
-              className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+              className="h-9 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || valueInvalid || categoryMissing || loadingCats}
-              className="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              className="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60 cursor-pointer"
             >
               {submitting ? "Saving..." : "Save"}
             </button>

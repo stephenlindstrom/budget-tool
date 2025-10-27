@@ -102,12 +102,12 @@ export default function DashboardPage() {
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="rounded-lg border px-2 py-1 text-sm"
+            className="rounded-lg border px-2 py-1 text-sm cursor-pointer"
           />
           <button
             type="button"
             onClick={() => navigate(`/budgets/${month}`)}
-            className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-sm hover:bg-slate-50"
+            className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-sm hover:bg-slate-50 cursor-pointer"
             title="Open full month details"
           >
             Details <ExternalLink className="h-3.5 w-3.5" />
@@ -115,7 +115,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => navigate("/transactions")}
-            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-700"
+            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-700 cursor-pointer"
             title="Add a transaction"
           >
             <Plus className="h-4 w-4" /> Add transaction

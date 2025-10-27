@@ -243,7 +243,7 @@ function TransactionPage() {
         <button
           type="button"
           onClick={() => setOpenAdd(true)}
-          className="inline-flex h-9 items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          className="inline-flex h-9 items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer"
         >
           <Plus size={16} />
           Add transaction
@@ -266,7 +266,7 @@ function TransactionPage() {
             value={filter.type}
             onChange={onFilterChange}
             disabled={loadingTrans}
-            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500 cursor-pointer"
           >
             <option value="">All</option>
             <option value="EXPENSE">Expense</option>
@@ -283,7 +283,7 @@ function TransactionPage() {
             onChange={onFilterChange}
             disabled={loadingCats || !!catsError || loadingTrans}
             aria-invalid={!!catsError}
-            className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500
+            className={`h-9 rounded-md border bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500 cursor-pointer
               ${catsError ? "border-red-500 focus:ring-red-500/20" : "border-slate-300 focus:border-blue-600 focus:ring-blue-600/20"}`}
           >
             <option value="">All</option>
@@ -313,7 +313,7 @@ function TransactionPage() {
             value={filter.startDate}
             onChange={onFilterChange}
             disabled={loadingTrans}
-            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-50 cursor-pointer"
           />
         </label>
 
@@ -327,7 +327,7 @@ function TransactionPage() {
             onChange={onFilterChange}
             min={filter.startDate || undefined}
             disabled={loadingTrans}
-            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500"
+            className="h-9 rounded-md border border-slate-300 bg-white px-3 text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-500 cursor-pointer"
           />
         </label>
 
@@ -336,7 +336,7 @@ function TransactionPage() {
           <button
             type="submit"
             disabled={loadingTrans}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            className="inline-flex h-9 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60 cursor-pointer"
           >
             Apply
           </button>
@@ -347,7 +347,7 @@ function TransactionPage() {
               clearFilter();
               fetchAll();
             }}
-            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:opacity-60 cursor-pointer"
           >
             Clear
           </button>
@@ -377,7 +377,7 @@ function TransactionPage() {
                         aria-label={`Sort by ${c.header} ${
                           isActive ? (sort.dir === "asc" ? "descending" : "ascending") : c.defaultDir ?? "ascending"
                         }`}
-                        className={`group inline-flex items-center gap-1 ${
+                        className={`group inline-flex items-center gap-1 cursor-pointer ${
                           isActive ? "text-blue-700" : "text-slate-700"
                         }`}
                       >

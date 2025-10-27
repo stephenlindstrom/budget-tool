@@ -183,7 +183,7 @@ useEffect(() => {
                 // Keep URL in sync so you can share/bookmark
                 navigate(`/budgets/${next}`, { replace: true });
               }}
-              className="rounded-lg border px-2 py-1 text-sm"
+              className="rounded-lg border px-2 py-1 text-sm cursor-pointer"
             />
           </div>
           <button
