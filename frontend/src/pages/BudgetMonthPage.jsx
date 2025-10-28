@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
-import { ArrowLeft, Search, Plus, Calculator } from "lucide-react";
+import { ArrowLeft, Search, Plus, Pencil } from "lucide-react";
 import AddBudgetModal from "../components/budgets/AddBudgetModal";
 import { useCategories } from "../hooks/useCategories";
 
@@ -16,6 +16,11 @@ export default function BudgetMonthPage() {
   const [items, setItems] = useState([]); // Array<BudgetSummaryDTO>
   const [incomeRows, setIncomeRows] = useState([]);
   const [incomeError, setIncomeError] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editRow, setEditRow] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const [query, setQuery] = useState("");
   const [hideZero, setHideZero] = useState(false);
@@ -150,11 +155,129 @@ useEffect(() => {
     [incomeRows]
   );
 
+  const openEdit = (row) => {
+    if (!row?.id) return; // only edit when a budget exists
+    setEditRow(row);
+    setEditValue(String(row.budgeted ?? 0));
+    setEditError("");
+    setEditOpen(true);
+  };
+
+  const closeEdit = () => {
+    setEditOpen(false);
+    setEditRow(null);
+    setEditValue("");
+    setEditError("");
+  };
+
+  const saveEdit = async () => {
+    if (savingEdit) return;
+    if (!editRow?.id) return;
+
+    const raw = editValue.trim();
+    const parsed = Number(raw);
+    const isNumber = raw !== "" && Number.isFinite(parsed) && parsed >= 0;
+    if (!isNumber) {
+      setEditError("Enter a valid non-negative amount (or 0 to remove).");
+      return;
+    }
+
+    const nextVal = Math.min(9999999999, round2(parsed));
+
+    const original = Number(editRow?.budgeted ?? 0);
+    if (round2(original) === nextVal) {
+      closeEdit();
+      return;
+    }
+
+    setSavingEdit(true);
+    setEditError("");
+
+    // keep a copy for rollback
+    const prev = { ...editRow };
+
+    if (nextVal === 0) {
+      // Optimistic: remove budget
+      setItems((list) =>
+        list.map((r) =>
+          String(r.categoryId) === String(prev.categoryId)
+            ? { ...r, id: null, budgeted: 0, remaining: round2(0 - (r.spent ?? 0)) }
+            : r
+        )
+      );
+      try {
+        await api.delete(`/budgets/${prev.id}`);
+        closeEdit();
+      } catch (err) {
+        // rollback
+        setItems((list) =>
+          list.map((r) =>
+            String(r.categoryId) === String(prev.categoryId) ? prev : r
+          )
+        );
+        const msg =
+          err?.response?.data?.message ||
+          (err?.code === "ERR_NETWORK"
+            ? "Network error. Check your connection."
+            : "Delete failed");
+        setEditError(msg);
+      } finally {
+        setSavingEdit(false);
+      }
+      return;
+    }
+
+    // nextVal > 0; update existing budget amount
+    // Optimistic update
+    setItems((list) =>
+      list.map((r) =>
+        String(r.categoryId) === String(prev.categoryId)
+          ? {
+              ...r,
+              budgeted: nextVal,
+              remaining: round2(nextVal - (r.spent ?? 0)),
+            }
+          : r
+      )
+    );
+    try {
+      await api.put(`/budgets/${prev.id}`, { 
+        value: nextVal,
+        month: monthValue,
+        categoryId: prev.categoryId,
+      });
+      closeEdit();
+    } catch (err) {
+      // rollback
+      setItems((list) =>
+        list.map((r) =>
+          String(r.categoryId) === String(prev.categoryId) ? prev : r
+        )
+      );
+      const msg =
+        err?.response?.data?.message ||
+        (err?.code === "ERR_NETWORK"
+          ? "Network error. Check your connection."
+          : "Update failed");
+      setEditError(msg);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const onHeaderClick = (key) => {
     setSort((prev) =>
       prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }
     );
   };
+
+  const raw = editValue.trim();
+  const parsed = Number(raw);
+  const isNumber = raw !== "" && Number.isFinite(parsed) && parsed >= 0;
+  const nextValPreview = isNumber ? round2(parsed) : null;
+  const unchanged =
+    isNumber && round2(Number(editRow?.budgeted ?? 0)) === nextValPreview;
+
 
   return (
     <div className="mx-auto max-w-6xl p-4">
@@ -253,8 +376,8 @@ useEffect(() => {
 
       {/* Table */}
       <div className="mt-3 overflow-x-auto rounded-2xl border bg-white shadow-sm">
-        <table className="min-w-[760px] w-full border-separate border-spacing-0">
-          <thead>
+        <table className="min-w-[820px] w-full border-separate border-spacing-0">
+          <thead className="bg-slate-50">
             <tr className="text-left">
               {[
                 { key: "category", label: "Category" },
@@ -272,13 +395,14 @@ useEffect(() => {
                   {col.label}
                 </Th>
               ))}
+              <th className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600"></th>
             </tr>
           </thead>
           <tbody>
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="border-b last:border-0">
-                    {Array.from({ length: 5 }).map((__, j) => (
+                    {Array.from({ length: 6 }).map((__, j) => (
                       <td key={j} className="px-3 py-3">
                         <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
                       </td>
@@ -331,6 +455,24 @@ useEffect(() => {
                           </div>
                         </div>
                       </td>
+
+                      {/* Actions */}
+                      <td className="px-3 py-2">
+                        {hasBudget ? (
+                          <button
+                            type="button"
+                            onClick={() => openEdit(r)}
+                            aria-label={`Edit budget for ${r.categoryName}`}
+                            title="Edit budget"
+                            className="inline-flex h-8 items-center gap-1 rounded-md border px-2 text-sm hover:bg-slate-50 cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </button>
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -347,6 +489,7 @@ useEffect(() => {
                 <td className="px-3 py-3 tabular-nums">
                   {Math.max(0, Math.min(100, usagePct))}%
                 </td>
+                <td className="px-3 py-3" />
               </tr>
             )}
           </tbody>
@@ -430,6 +573,58 @@ useEffect(() => {
           </table>
         </div>
       </div>
+      {editOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="w-full max-w-sm rounded-2xl border bg-white p-4 shadow-xl">
+            <h3 className="text-base font-semibold">Edit budget</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              {editRow?.categoryName} — {fmtMonth(monthValue)}
+            </p>
+
+            <label className="mt-4 block text-sm">
+              <span className="text-slate-700">Amount</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                disabled={savingEdit}
+                className="mt-1 w-full rounded-md border px-3 py-2"
+              />
+              <span className="mt-1 block text-xs text-slate-500">
+                Set to <strong>0</strong> to remove this budget.
+              </span>
+            </label>
+
+            {editError && (
+              <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {editError}
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeEdit}
+                disabled={savingEdit}
+                className="inline-flex items-center rounded-md border px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveEdit}
+                disabled={savingEdit || !isNumber || unchanged}
+                className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 cursor-pointer"
+              >
+                {savingEdit ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <AddBudgetModal
         open={openAddBudget}
         onClose={() => setOpenAddBudget(false)}
@@ -478,7 +673,7 @@ function Th({ children, active, dir, onClick }) {
   return (
     <th
       onClick={onClick}
-      className={`cursor-pointer select-none border-b bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide ${
+      className={`cursor-pointer select-none border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide ${
         active ? "text-slate-900" : "text-slate-600"
       }`}
       title="Sort"
