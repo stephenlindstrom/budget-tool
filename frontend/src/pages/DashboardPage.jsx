@@ -183,7 +183,7 @@ export default function DashboardPage() {
           }
         </Card>
 
-        <Card title="Unbudgeted spend (no budget set)">
+        <Card title="Unbudgeted spending">
           {loading ? <SkeletonLines rows={5} /> :
             unbudgeted.length === 0 ? (
               <Empty text="No unbudgeted spending this month." />
@@ -204,7 +204,7 @@ export default function DashboardPage() {
                     </div>
                     <button
                       type="button"
-                      className="rounded-lg border px-2 py-1 text-xs hover:bg-slate-50"
+                      className="rounded-lg border px-2 py-1 text-xs hover:bg-slate-50 cursor-pointer"
                       onClick={() => navigate(`/budgets/${month}`)}
                       title="Open month details to add a budget"
                     >
