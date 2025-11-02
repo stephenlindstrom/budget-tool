@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import api from "../api/api";
-import { ChevronUp, ChevronDown, ChevronsUpDown, Plus, Trash } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, Plus, Trash, Pencil } from "lucide-react";
 import { useCategories } from "../hooks/useCategories";
-import AddTransactionModal from "../components/transactions/AddTransactionModal";
+import TransactionModal from "../components/transactions/TransactionModal";
+import ConfirmDialog from "../components/common/ConfirmDialog";
 
 function TransactionPage() {
   const { loading: authLoading } = useAuth();
@@ -22,6 +23,11 @@ function TransactionPage() {
   const [loadingTrans, setLoadingTrans] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
+  // ---- Delete confirmation modal ----
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   // ---- Filter state ----
   const [filter, setFilter] = useState({
     type: "",
@@ -39,11 +45,12 @@ function TransactionPage() {
   // ---- Sorting ----
   const [sort, setSort] = useState({ key: "date", dir: "desc" });
 
-  const dateFormatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  function formatDisplayDateLong(dateStr) {
+    if (!dateStr) return "-";
+    const [y, m, d] = dateStr.split("-");
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${months[m-1]} ${d} ${y}`;
+  }
 
   const currencyFormatter = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -113,12 +120,21 @@ function TransactionPage() {
     }
   }, [filter]);
 
-  const handleDelete = useCallback(async (id) => {
+  const openDeleteConfirm = useCallback((id) => {
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
-    if (!window.confirm("Delete this transaction?")) return;
+    setConfirmTarget({ id: tx.id, description: tx.description, amount: tx.amount });
+    setConfirmOpen(true);
+  }, [transactions]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!confirmTarget) return;
+    const id = confirmTarget.id;
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) { setConfirmOpen(false); return; }
 
     setDeletingId(id);
+    setConfirmLoading(true);
     setTransError("");
 
     // optimistic remove
@@ -138,8 +154,11 @@ function TransactionPage() {
       setTransError(msg);
     } finally {
       setDeletingId(null);
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setConfirmTarget(null);
     }
-  }, [transactions]);
+  }, [confirmTarget, transactions]);
 
   // initial load
   useEffect(() => {
@@ -147,22 +166,10 @@ function TransactionPage() {
     return () => transCtrlRef.current?.abort();
   }, [authLoading, fetchAll]);
 
-  // ---- Add Transaction Modal ----
+  // ---- Create/Edit Transaction Modals ----
   const [openAdd, setOpenAdd] = useState(false);
-
-  const normalizeCreated = useCallback(
-    (tx) => {
-      if (!tx) return tx;
-      if (!tx.category && tx.categoryId != null) {
-        const cat = categories.find(
-          (c) => String(c.id) === String(tx.categoryId)
-        );
-        return {...tx, category: cat || null };
-      }
-      return tx;
-    },
-    [categories]
-  );
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selectedTx, setSelectedTx] = useState(null);
 
   const matchesFilter = useCallback(
     (tx) => {
@@ -438,7 +445,7 @@ function TransactionPage() {
               rows.map(({ id, amount, date, description, category }) => (
                 <tr key={id} className="hover:bg-slate-50/60">
                   <td className="px-4 py-3 text-sm text-slate-900">
-                    {dateFormatter.format(new Date((date ?? "") + "T00:00:00"))}
+                    {formatDisplayDateLong(date)}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-900">{description ?? "-"}</td>
                   <td className="px-4 py-3 text-sm text-slate-900">
@@ -448,16 +455,31 @@ function TransactionPage() {
                     {currencyFormatter.format(Number(amount ?? 0))}
                   </td>
                   <td className="px-2 py-2 text-sm">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(id)}
-                      disabled={deletingId === id || loadingTrans}
-                      aria-label={`Delete ${description ?? "transaction"}`}
-                      title={deletingId === id ? "Deleting..." : "Delete transaction"}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-red-50 disabled:opacity-50 cursor-pointer"
-                    >
-                      <Trash size={16}/>
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTx({ id, amount, date, description, category, categoryId: category?.id, type: rows.find(r => r.id === id)?.type });
+                          setOpenEdit(true);
+                        }}
+                        disabled={loadingTrans}
+                        aria-label={`Edit ${description ?? "transaction"}`}
+                        title="Edit transaction"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100 disabled:opacity-50 cursor-pointer mr-1.5"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openDeleteConfirm(id)}
+                        disabled={deletingId === id || loadingTrans}
+                        aria-label={`Delete ${description ?? "transaction"}`}
+                        title={deletingId === id ? "Deleting..." : "Delete transaction"}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-red-50 disabled:opacity-50 cursor-pointer"
+                      >
+                        <Trash size={16}/>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -465,19 +487,60 @@ function TransactionPage() {
         </table>
       </div>
 
-      {/* Add Transaction Modal */}
-      <AddTransactionModal
+      {/* Create Transaction Modal */}
+      <TransactionModal
         open={openAdd}
+        mode="create"
         onClose={() => setOpenAdd(false)}
-        onCreated={(tx) => {
-          const created = normalizeCreated(tx);
-          if (!anyFilterActive || matchesFilter(created)) {
-            setTransactions((list) => [created, ...list]);
-          } else {
-            // New tx doesn’t match active filters—refresh filtered view
-            fetchFiltered();
+        onSaved={(tx) => {
+          if (!tx) return;
+          if (!anyFilterActive || matchesFilter(tx)) {
+              setTransactions((list) => [tx, ...list]);
           }
         }}
+      />
+
+      {/* Edit Transaction Modal */}
+      <TransactionModal
+        open={openEdit}
+        mode="edit"
+        initial={selectedTx}
+        onClose={() => {
+          setOpenEdit(false);
+          setSelectedTx(null);
+        }}
+        onSaved={(tx) => {
+          if (!tx) return;
+
+          setTransactions((list) => {
+            // first, merge the updated tx
+            const merged = list.map((t) => (t.id === tx.id ? { ...t, ...tx } : t));
+
+            // if a filter is active and this edit breaks the match, drop it locally
+            if (anyFilterActive && !matchesFilter(tx)) {
+              return merged.filter((t) => t.id !== tx.id);
+            }
+            return merged;
+          });
+        }}
+
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete transaction?"
+        body={
+          confirmTarget?.description && confirmTarget?.amount
+            ? `"${confirmTarget.description} - ${currencyFormatter.format(Number(confirmTarget.amount))}" will be permanently removed.`
+            : "This transaction will be permanently removed."
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        loading={confirmLoading}
+        onCancel={() => { if (!confirmLoading) { setConfirmOpen(false); setConfirmTarget(null); } }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );
